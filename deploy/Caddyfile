@@ -1,0 +1,4 @@
+{$SLOPCHAN_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy slopchan:8080
+}

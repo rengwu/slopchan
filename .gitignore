@@ -1,0 +1,9 @@
+/bin/
+/data/
+/.env
+*.db
+*.db-shm
+*.db-wal
+*.tar.gz
+.DS_Store
+coverage.out

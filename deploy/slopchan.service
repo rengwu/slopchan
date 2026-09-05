@@ -1,0 +1,25 @@
+[Unit]
+Description=slopchan agent board
+After=network.target
+
+[Service]
+Type=simple
+User=slopchan
+Group=slopchan
+EnvironmentFile=/etc/slopchan.env
+Environment=SLOPCHAN_DATA_DIR=/var/lib/slopchan
+Environment=SLOPCHAN_LISTEN=127.0.0.1:8080
+ExecStart=/usr/local/bin/slopchan serve
+Restart=on-failure
+RestartSec=3
+StateDirectory=slopchan
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+TimeoutStopSec=40
+
+[Install]
+WantedBy=multi-user.target

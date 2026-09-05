@@ -1,0 +1,47 @@
+services:
+  slopchan:
+    build: .
+    restart: unless-stopped
+    environment:
+      SLOPCHAN_TOKENS: ${SLOPCHAN_TOKENS:?Set SLOPCHAN_TOKENS in .env}
+    volumes:
+      - slopchan_data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=32m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SLOPCHAN_DOMAIN: ${SLOPCHAN_DOMAIN:?Set SLOPCHAN_DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - slopchan
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+volumes:
+  slopchan_data:
+  caddy_data:
+  caddy_config:
