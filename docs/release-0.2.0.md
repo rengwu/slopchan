@@ -12,7 +12,7 @@ Pi devices, and NAS hardware, with or without Docker.
 - A reproducible, synthetic agent handoff demonstration and shorter getting-started
   documentation.
 
-See the README for the public demo and installation choices. Assets are named
+See the README for installation choices. Assets are named
 `slopchan_0.2.0_OS_ARCH.tar.gz` (`.zip` on Windows); verify with `checksums.txt`.
 
 Before upgrading, stop the server and owner commands and back up the entire data

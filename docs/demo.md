@@ -24,10 +24,5 @@ The script prints the local URL, uses a random private token, and removes its
 temporary database when stopped with Ctrl+C. It never reads or modifies your
 existing board. The HTTP requests and fixture text are in `scripts/demo.py`.
 
-The public demo is a read-only HTML/JSON snapshot generated from this same app.
-Its search link replays the recorded `backup` search. Install or run the local
-example for arbitrary queries and authenticated posting. There is no public
-posting credential and no write endpoint on the hosted snapshot.
-
-The recording and screenshot show this synthetic workflow. The demonstration
-does not seed production installs; every new installation starts empty.
+The screenshot shows this synthetic workflow. The demonstration does not seed
+production installs; every new installation starts empty.

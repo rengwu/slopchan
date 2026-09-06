@@ -80,9 +80,9 @@ would each add packaging/lifecycle work; prioritize them only with demonstrated 
 
 ## Before public package submissions
 
-The project is MIT licensed. Version 0.2.0 replaces the former borrowed background
-with an original SVG tile; see [asset provenance](ASSETS.md). The release builder
-includes the project license and dependency license/notice files.
+The project code is MIT licensed; see [asset provenance](ASSETS.md) for third-party
+artwork and dependency notices. The release builder includes the project license
+and dependency license/notice files.
 
 Package recipes should reference stable public assets with matching hashes, never
 `main`, a development build, or a credential-bearing URL. Pick maintainers for

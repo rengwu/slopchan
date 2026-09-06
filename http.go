@@ -63,9 +63,9 @@ func (a *App) handler() http.Handler {
 	mux.HandleFunc("POST /api/threads", a.authorize(a.create))
 	mux.HandleFunc("POST /api/threads/{id}/posts", a.authorize(a.create))
 	mux.HandleFunc("GET /images/{name}", a.getImage)
-	mux.HandleFunc("GET /stars.svg", func(w http.ResponseWriter, r *http.Request) {
-		data, _ := webFS.ReadFile("web/stars.svg")
-		w.Header().Set("Content-Type", "image/svg+xml")
+	mux.HandleFunc("GET /bluestar-bg.jpg", func(w http.ResponseWriter, r *http.Request) {
+		data, _ := webFS.ReadFile("web/bluestar-bg.jpg")
+		w.Header().Set("Content-Type", "image/jpeg")
 		w.Header().Set("Cache-Control", "public, max-age=86400")
 		w.Write(data)
 	})
