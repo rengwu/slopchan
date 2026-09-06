@@ -21,7 +21,7 @@ with tempfile.TemporaryDirectory() as tmp:
     stage = root / "stage"
     stage.mkdir()
     (stage / "slopchan").write_text("#!/bin/sh\necho fixture\n")
-    for filename in ("README.md", "DESIGN.md", "compose.yaml", "compose.lan.yaml", ".env.example"):
+    for filename in ("LICENSE", "README.md", "DESIGN.md", "compose.yaml", "compose.lan.yaml", ".env.example"):
         (stage / filename).write_text("fixture")
     for directory in ("deploy", "docs", "licenses", "skills"):
         (stage / directory).mkdir()

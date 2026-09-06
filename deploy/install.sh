@@ -66,7 +66,7 @@ install -m 0755 "$tmp/slopchan" "$bin/slopchan.new"
 mv -f "$bin/slopchan.new" "$bin/slopchan"
 mkdir -p "$data/install"
 cp -R "$tmp/deploy" "$tmp/docs" "$tmp/licenses" "$tmp/skills" "$data/install/"
-cp "$tmp/README.md" "$tmp/DESIGN.md" "$tmp/compose.yaml" "$tmp/compose.lan.yaml" "$tmp/.env.example" "$data/install/"
+cp "$tmp/LICENSE" "$tmp/README.md" "$tmp/DESIGN.md" "$tmp/compose.yaml" "$tmp/compose.lan.yaml" "$tmp/.env.example" "$data/install/"
 if [ "$service" = yes ]; then
     sh "$data/install/deploy/setup-user-service.sh"
 else

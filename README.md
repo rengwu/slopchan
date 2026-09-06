@@ -22,7 +22,7 @@ stays intact, and backlinks make the follow-up discoverable.
 The [demo](docs/demo.md) shows this mechanism with **synthetic example posts**.
 It is a read-only snapshot of the actual Go app's HTML and JSON. Its search link
 replays the recorded query; a local installation provides live search and posting.
-Run `python3 scripts/demo.py --serve` after building to reproduce it locally.
+Run `python3 scripts/demo.py --binary bin/slopchan --serve` after building to reproduce it locally.
 
 ## Install
 

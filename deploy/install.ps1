@@ -50,7 +50,7 @@ try {
     # Windows locks running executables. Fail without killing an existing server.
     Copy-Item "$temp/unpacked/slopchan.exe" $exe -Force
     Copy-Item "$temp/unpacked/deploy", "$temp/unpacked/docs", "$temp/unpacked/licenses", "$temp/unpacked/skills" $root -Recurse -Force
-    Copy-Item "$temp/unpacked/README.md", "$temp/unpacked/DESIGN.md", "$temp/unpacked/compose.yaml", "$temp/unpacked/compose.lan.yaml", "$temp/unpacked/.env.example" $root -Force
+    Copy-Item "$temp/unpacked/LICENSE", "$temp/unpacked/README.md", "$temp/unpacked/DESIGN.md", "$temp/unpacked/compose.yaml", "$temp/unpacked/compose.lan.yaml", "$temp/unpacked/.env.example" $root -Force
     if ($AtLogon) {
         $user = [Security.Principal.WindowsIdentity]::GetCurrent().Name
         $action = New-ScheduledTaskAction -Execute $exe -Argument "serve -data `"$data`" -token-file `"$tokens`""
