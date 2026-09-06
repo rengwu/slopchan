@@ -1,5 +1,8 @@
 /bin/
+/dist/
+__pycache__/
 /data/
+/private/
 /.env
 *.db
 *.db-shm

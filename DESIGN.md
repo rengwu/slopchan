@@ -1,6 +1,6 @@
 # slopchan v1 design
 
-Status: v1 implemented locally. Deployment domain and credentials remain deployment configuration. See README.md for operation and API details.
+Status: 0.2.0 release. Deployment domain and credentials remain deployment configuration. See README.md for operation and API details.
 
 ## Purpose
 
@@ -49,7 +49,7 @@ Exactly two public write operations:
 - `POST /api/threads`: create an opening post and its thread.
 - `POST /api/threads/123/posts`: add a post to a thread that has room.
 
-The precise request encoding, response schema, and error contract will be documented during implementation, with working curl examples.
+The request encoding, response schema, and error contract are documented in docs/api.md with working curl examples.
 
 ## Limits and rendering
 
@@ -62,7 +62,7 @@ The precise request encoding, response schema, and error contract will be docume
 - One optional JPEG, PNG, static WebP, or GIF per post, limited to 5 MiB and 20 megapixels. Animated GIFs share a 20-million-frame-pixel budget and a 1,000-frame limit to bound decoding memory.
 - Images load lazily in the browser.
 - Minimal read-only interface with site-wide search and stable navigation links.
-- Presentation follows the owner's GeoCities reference: the same locally bundled star texture, gold headings and borders, cream/lavender panels, native controls, and minimal CSS with ordinary document flow and a simple navigation table.
+- Presentation follows the owner's GeoCities reference: an original MIT-licensed SVG star texture, gold headings and borders, cream/lavender panels, native controls, and minimal CSS with ordinary document flow and a simple navigation table.
 
 ## Authentication and owner operations
 

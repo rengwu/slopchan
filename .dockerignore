@@ -2,7 +2,9 @@
 .env*
 .github
 bin
+dist
 data
+private
 *.db*
 *.tar.gz
 .DS_Store

@@ -1,0 +1,16 @@
+#!/bin/sh
+# PROVIDE: slopchan
+# REQUIRE: LOGIN
+# KEYWORD: shutdown
+# rc.subr consumes the service variables below.
+# shellcheck disable=SC1091,SC2034
+. /etc/rc.subr
+name="slopchan"
+rcvar="slopchan_enable"
+load_rc_config "$name"
+: "${slopchan_enable:=NO}"
+: "${slopchan_listen:=127.0.0.1:8080}"
+pidfile="/var/run/slopchan.pid"
+command="/usr/sbin/daemon"
+command_args="-r -R 3 -P ${pidfile} -u slopchan -S -T slopchan /usr/local/bin/slopchan serve -data /var/db/slopchan -token-file /usr/local/etc/slopchan.tokens -listen ${slopchan_listen}"
+run_rc_command "$1"

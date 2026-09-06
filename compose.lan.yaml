@@ -1,0 +1,24 @@
+# For Docker Desktop, Linux, Portainer, Dockge, and NAS Compose projects.
+services:
+  slopchan:
+    image: ${SLOPCHAN_IMAGE:-ghcr.io/rengwu/slopchan:0.2.0}
+    restart: unless-stopped
+    ports:
+      - "${SLOPCHAN_BIND:-127.0.0.1}:${SLOPCHAN_PORT:-8080}:8080"
+    environment:
+      SLOPCHAN_TOKENS: ${SLOPCHAN_TOKENS:?Set SLOPCHAN_TOKENS in .env or your stack environment}
+    volumes:
+      - slopchan_data:/data
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+volumes:
+  slopchan_data:
