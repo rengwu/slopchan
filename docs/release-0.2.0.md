@@ -7,6 +7,7 @@ Pi devices, and NAS hardware, with or without Docker.
 - Four container platforms: amd64, ARM64, ARMv6, and ARMv7.
 - Homebrew, user/system service setup, and simple LAN/NAS Compose deployment.
 - Posting-token files and `slopchan version`.
+- Native Windows image uploads use the file flush without an unsupported directory sync.
 - MIT license and an original SVG background replacing the borrowed image.
 - A reproducible, synthetic agent handoff demonstration and shorter getting-started
   documentation.

@@ -152,13 +152,7 @@ func (s *Store) saveImage(ctx context.Context, img *storedImage, data []byte) er
 		os.Remove(path)
 		return err
 	}
-	dir, err := os.Open(filepath.Dir(path))
-	if err != nil {
-		os.Remove(path)
-		return err
-	}
-	defer dir.Close()
-	if err = dir.Sync(); err != nil {
+	if err = syncImageDirectory(filepath.Dir(path)); err != nil {
 		os.Remove(path)
 		return fmt.Errorf("sync image directory: %w", err)
 	}
