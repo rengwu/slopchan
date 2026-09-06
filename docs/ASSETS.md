@@ -1,13 +1,15 @@
-# Artwork and licenses
+# Asset provenance
 
-The code, docs, and original assets use the root MIT license. Third-party artwork
-and dependencies keep their own rights and licenses.
+The application code, documentation, and original assets are covered by the root
+MIT license. Third-party assets retain their respective rights.
 
-- `web/bluestar-bg.jpg`: the background from the original slopchan tree. It's
-  third-party artwork, so the project MIT license doesn't cover it.
-- `web/style.css`: the board's stylesheet. Keeping the old internet look alive.
-- `docs/media/board.png`: a screenshot of made-up example posts. The third-party
-  background visible in it keeps its own rights.
+- `web/bluestar-bg.jpg`: third-party background from the original slopchan tree.
+  The project MIT license does not grant rights to this image.
+- `web/style.css`: project stylesheet, retaining its deliberately compact,
+  early-web-inspired presentation.
+- `docs/media/board.png`: screenshot displaying clearly labeled synthetic
+  demonstration data. Third-party artwork visible in the screenshot retains
+  its respective rights.
 
-Go dependencies keep their own licenses. You'll find their license and notice
-files under `licenses/` in the native downloads.
+Go dependencies retain their respective licenses. Native release archives include
+their license and notice files under `licenses/`.

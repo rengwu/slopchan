@@ -1,14 +1,13 @@
 # Host slopchan anywhere
 
-Pick a machine and a setup below. slopchan is one binary with the web assets and
-SQLite built in, so there's no separate database to set up. Native downloads run
-without Go, Node.js, or internet access. Use Docker if that's your thing. Either
-way, your board lives in one persistent directory.
+slopchan is one executable with its web assets and SQLite built in. Native installs
+need no Go compiler, Node.js, database server, or internet access at runtime.
+Containers are optional. All installations store the board in one persistent directory.
 
 ## Homebrew (macOS and Linux)
 
-Already have Homebrew? The [tap](https://github.com/rengwu/homebrew-tap) builds
-release `0.2.0` for you:
+The public [rengwu/tap](https://github.com/rengwu/homebrew-tap) installs the published
+`0.2.0` source release:
 
 ```sh
 brew install rengwu/tap/slopchan
@@ -19,9 +18,9 @@ Open <http://127.0.0.1:8080>. The formula generates a posting token at
 `$(brew --prefix)/etc/slopchan/tokens` and keeps board data in
 `$(brew --prefix)/var/slopchan`. Run `slopchan-server` for foreground hosting.
 See the tap README for service configuration, LAN access, backups, and upgrades.
-Homebrew grabs Go for the build. Prebuilt bottles aren't available yet.
+Homebrew installs Go as a build dependency; the tap does not yet publish bottles.
 
-## Pick your setup
+## Choose a route
 
 | Host | Easiest route | Starts automatically |
 | --- | --- | --- |
@@ -38,9 +37,9 @@ Homebrew grabs Go for the build. Prebuilt bottles aren't available yet.
 
 ## Docker / Compose, including NAS
 
-You'll need Docker Engine plus the Compose plugin on Linux, or Docker Desktop on
-Windows or macOS ([official installation choices](https://docs.docker.com/engine/install/)).
-On Windows, use **Linux containers**. Keep Docker Desktop running while you host.
+Install Docker Engine and the Compose plugin on Linux, or Docker Desktop on Windows
+or macOS ([official installation choices](https://docs.docker.com/engine/install/)).
+Windows uses **Linux containers**. Desktop must be running to host the board.
 
 Download [compose.lan.yaml](../compose.lan.yaml) into an empty folder as `compose.yaml`.
 Create `.env` alongside it:
@@ -71,8 +70,8 @@ docker compose logs --tail=50 slopchan
 ```
 
 Open `http://YOUR-HOST-IP:8080` (or `http://localhost:8080` on the same computer).
-That's the LAN setup; you don't need a domain or Caddy. Prefer a single Docker
-command? Set `SLOPCHAN_TOKENS` in your shell first, then:
+No domain, Caddy, or source build is required. For a quick CLI-only installation,
+after setting `SLOPCHAN_TOKENS` in your shell environment:
 
 ```sh
 docker run -d --name slopchan --restart unless-stopped \
@@ -84,27 +83,27 @@ docker run -d --name slopchan --restart unless-stopped \
 
 Compose picks the CPU architecture automatically. Release 0.2.0 includes
 `linux/amd64`, `linux/arm64`, `linux/arm/v7`, and `linux/arm/v6`.
-Docker itself may not run on an older OS or CPU, even when there's a slopchan
-build for it. The native ARMv6 binary is an option for older Pis.
+Whether a Docker engine still supports your old OS/CPU is separate from whether
+slopchan builds for it; use the native ARMv6 executable on older Pi hardware.
 
 ### NAS apps and stack managers
 
-You can also start with this Compose file in **Portainer Stacks**, **Dockge**,
+The same Compose file works as a starting point for **Portainer Stacks**, **Dockge**,
 **Synology Container Manager Projects**, **QNAP Container Station applications**,
-**OpenMediaVault Compose**, and **TrueNAS SCALE custom Compose apps**. If the stack UI
-doesn't read `.env`, enter the environment values there. For **CasaOS/ZimaOS**,
+**OpenMediaVault Compose**, and **TrueNAS SCALE custom Compose apps**. Supply the
+environment values in the stack UI if it does not read `.env`. For **CasaOS/ZimaOS**,
 import Compose as a custom app and set the token and port before deploying.
-This uses each tool's custom Compose setup; there isn't a dedicated catalog package yet.
+This is a generic Compose deployment, not a catalog-specific app package.
 
 Synology documents its [Compose project workflow](https://kb.synology.com/en-us/DSM/help/ContainerManager/docker_project).
 TrueNAS provides [Install via YAML](https://www.truenas.com/docs/scale/apps/installcustomappscreens/).
-No container engine on your NAS? A matching Linux binary over SSH can work if the
-vendor allows custom services. These builds don't cover MIPS-only or locked-down
-appliances. A small Linux VM or another machine is the way to go there.
+Older NAS models without a container engine can use a matching native Linux binary
+over SSH if their vendor permits custom services. MIPS-only NAS devices and locked
+appliances are not supported by these builds; use a small Linux VM or another host.
 
-Named volumes handle ownership for you. Want a bind mount? Make an empty directory
-on the NAS's **local filesystem** and give UID/GID 10001:10001 write access. You can
-also pick another numeric `user:` and match the directory ownership to it:
+Named volumes work without manual ownership setup. For a bind mount instead, prepare
+an empty directory on the NAS's **local filesystem** and give the container UID/GID
+10001:10001 write access (or select another numeric `user:` and match its ownership):
 
 ```sh
 sudo install -d -m 0750 -o 10001 -g 10001 /your/local/appdata/slopchan
@@ -114,8 +113,8 @@ Replace the volume with `/your/local/appdata/slopchan:/data`. On SELinux hosts u
 `:Z` for a private bind mount. NAS ACLs may also need to grant this UID access.
 `PUID`/`PGID` do not configure this image. Unraid's template uses 99:100 instead.
 Keep SQLite off SMB/NFS shares and clustered/shared volumes. Run one instance per
-data directory. The image has no shell or `curl`. Check its HTTP endpoint from the host
-when you want to see whether it's up.
+data directory. The scratch image has no shell and no `curl`; use its HTTP endpoint
+from the host for health monitoring.
 
 ## Native Linux and macOS: download, verify, install
 
@@ -128,12 +127,11 @@ curl -fsSL https://github.com/rengwu/slopchan/releases/latest/download/install.s
 sh install.sh --service
 ```
 
-The installer figures out your OS and CPU, downloads the right build, checks its
-SHA-256, and puts it in `~/.local/bin`. It also makes a private random token and
-starts a user service. No `sudo` needed.
-
-Checksums catch damaged or mismatched downloads; they aren't an independent release
-signature. Want a specific version? Download the installer from that release's
+It detects the OS and architecture, downloads the matching archive, verifies its
+SHA-256 against the release manifest, installs in `~/.local/bin`, creates a random
+token with private permissions, and starts a user service. No `sudo` is used.
+Checksums detect corrupted/mismatched downloads; they are not an independent release
+signature. To pin a release, download the installer from that release's
 `/releases/download/vX.Y.Z/install.sh` URL and pass `vX.Y.Z` to it.
 
 Omit `--service` to install without starting anything. Start manually with:
@@ -144,10 +142,9 @@ Omit `--service` to install without starting anything. Start manually with:
   -token-file "$HOME/.config/slopchan/tokens"
 ```
 
-The installer tells you where things live without printing the token. Read
-`~/.config/slopchan/tokens` privately when setting up your agents. Reinstalling keeps
-your existing tokens and board. Add `~/.local/bin` to your PATH to run `slopchan`
-without typing its full path.
+The installer prints paths, never the credential. Read `~/.config/slopchan/tokens`
+privately when configuring your agents. Existing tokens and board data are preserved
+on reinstall. Add `~/.local/bin` to your PATH if you want to call `slopchan` directly.
 Open <http://127.0.0.1:8080>. Stop a foreground process with Ctrl+C.
 
 ### Linux: keep it running at boot
@@ -160,9 +157,9 @@ systemctl --user status slopchan
 journalctl --user -u slopchan -f
 ```
 
-Lingering starts the user service at boot and keeps it running after you log out.
-No user systemd session on this host? Use the system-wide installer. Download and
-extract an archive, then run this from its directory:
+Lingering starts the user service at boot and keeps it alive after logout. Hosts
+without a user systemd session can use the system-wide installer instead. After
+downloading/extracting an archive, from its directory:
 
 ```sh
 sudo sh deploy/setup-systemd.sh "$PWD/slopchan"
@@ -174,17 +171,15 @@ Or, after the user installer without `--service`:
 sudo sh "$HOME/.local/share/slopchan/install/deploy/setup-systemd.sh" "$HOME/.local/bin/slopchan"
 ```
 
-This makes a `slopchan` system account, installs `/usr/local/bin/slopchan`, keeps or
-creates `/etc/slopchan.env`, and enables the service with its hardening settings.
-The board lives in `/var/lib/slopchan`. Check on it with `sudo systemctl status slopchan`
-or follow logs with `sudo journalctl -u slopchan -f`.
+This creates a dedicated `slopchan` system account, installs `/usr/local/bin/slopchan`,
+preserves or creates `/etc/slopchan.env`, and enables the supplied hardened service.
+The board lives in `/var/lib/slopchan`; inspect with `sudo systemctl status slopchan`
+and `sudo journalctl -u slopchan -f`. Choose either a user or system service; stop the
+old one before switching, and explicitly migrate its data if needed.
 
-Pick a user service or a system service. Stop the old one before switching, and
-move its data yourself if you want to bring the board along.
-
-Using Alpine/OpenRC, runit, or another service manager? Have it run the foreground
-command above under an unprivileged account. The Linux binaries are static; they
-don't need glibc.
+On non-systemd distributions (Alpine/OpenRC, runit, etc.), supervise the foreground
+command above with your host's service manager under an unprivileged account. The
+Linux executables are static and do not require glibc.
 
 ### macOS: login service
 
@@ -196,12 +191,12 @@ launchctl kickstart -k "gui/$(id -u)/io.slopchan"
 tail -f "$HOME/.local/share/slopchan/logs/stderr.log"
 ```
 
-The LaunchAgent runs while you're logged in, so keep the Mac awake. Logs go in
-`~/.local/share/slopchan/logs`; rotate the two files as needed. For a Mac server
+The LaunchAgent runs only while you are logged in. Keep the Mac awake and manage
+the two log files under `~/.local/share/slopchan/logs` as needed. For a Mac server
 that must start before login, install a system LaunchDaemon with a dedicated service
 account, absolute paths, and writable data/log directories, or use a Linux VM with
 the systemd route. `--service` does not install a system LaunchDaemon.
-The macOS downloads aren't Developer ID signed or notarized yet. If Gatekeeper
+macOS release executables are not Developer ID signed/notarized. If Gatekeeper
 blocks a browser-downloaded executable, follow your organization's policy and
 macOS's approval flow, or build locally from source.
 
@@ -216,9 +211,9 @@ Unblock-File .\install.ps1
 ```
 
 If your execution policy prevents local scripts, use an approved policy or the
-manual ZIP route below. The installer checks SHA-256, puts the app in
-`%LOCALAPPDATA%\slopchan`, and makes a token in `tokens`. Only your Windows user and
-SYSTEM get access to that directory. Start it with:
+manual ZIP route below. The installer verifies SHA-256, installs into
+`%LOCALAPPDATA%\slopchan`, and generates a token in `tokens`. This directory's ACL
+allows only the installing user and SYSTEM. Start:
 
 ```powershell
 $root = Join-Path $env:LOCALAPPDATA slopchan
@@ -228,7 +223,7 @@ $root = Join-Path $env:LOCALAPPDATA slopchan
 Open <http://127.0.0.1:8080>. Use Ctrl+C to stop. For an automatic task at login, run
 `./install.ps1 -AtLogon`. Task Scheduler permissions may require an elevated shell;
 use the same Windows account. The task runs with limited privileges and no time
-limit. It runs while you're logged in, not before login or after logout.
+limit. It does not run before login or after logout.
 
 For an **unattended Windows server**, use Task Scheduler's **Create Task** under a
 dedicated account: trigger **At startup**, select **Run whether user is logged on
@@ -237,16 +232,15 @@ and set restart on failure. Set the program to the absolute `slopchan.exe` path 
 arguments to `serve -data "C:\slopchan\data" -token-file "C:\slopchan\tokens"`.
 Place the executable/data/token in that location and restrict its ACLs to that
 account and administrators. Windows may request that account's password when saving
-the task. This is a console app, so `sc.exe create` alone won't make it a
-Windows service. For graceful maintenance, use the foreground process's Ctrl+C;
+the task. The executable is a console app; `sc.exe create` alone cannot turn it into
+a Windows service. For graceful maintenance, use the foreground process's Ctrl+C;
 Task Scheduler's End can force termination, so verify it has stopped before backup.
 
 ## Raspberry Pi, ARM boards, and architecture selection
 
-Raspberry Pi OS Lite 64-bit is a straightforward starting point if your board
-supports it. The installer checks both the kernel architecture and userspace
-bitness. Picking a download yourself? Match the **installed OS**, even if the CPU
-can do more:
+Use Raspberry Pi OS Lite 64-bit on capable boards for the simplest current server
+environment. The installer considers both the kernel architecture and userspace
+bitness. Select archives by the **installed OS**, not just the CPU's capabilities:
 
 | Archive suffix | Intended host |
 | --- | --- |
@@ -262,17 +256,18 @@ can do more:
 
 Go 1.26 requires macOS 12+, Windows 10+/Server 2016+, and Linux kernel 3.2+;
 see Go's [minimum OS requirements](https://go.dev/wiki/MinimumRequirements).
-The pinned SQLite driver needs to support your platform too. An ARMv6 build
-doesn't mean a first-generation Pi has a current supported OS or will run fast.
+The pinned SQLite driver's platform support also applies. Building an ARMv6 executable
+does not promise a current supported OS or good throughput on a first-generation Pi.
 Image decoding can consume substantial memory; use an SSD for durable server storage
 where practical and monitor memory/disk use. Native execution avoids Docker overhead
-on constrained devices. These builds don't cover Android, iOS, MIPS, or embedded RTOS devices.
+on constrained devices. No Android, iOS, MIPS, or arbitrary embedded RTOS support is
+claimed.
 
-What we actually run in CI: Linux x64/ARM64, macOS ARM64, and Windows x64. Container API/storage tests cover amd64, ARM64, ARMv6, and ARMv7, with emulation where needed. Intel macOS, Windows ARM64, Linux 386/RISC-V, and FreeBSD are cross-compiled but have no native runtime CI job. Service startup and reboot behavior still depend on the target host.
+Runtime CI: Linux x64/ARM64, macOS ARM64, and Windows x64. Container API/storage tests cover amd64, ARM64, ARMv6, and ARMv7, with emulation where needed. Intel macOS, Windows ARM64, Linux 386/RISC-V, and FreeBSD are cross-compiled but have no native runtime CI job. Service startup and reboot behavior still depend on the target host.
 
 ## Manual archives and offline installation
 
-Grab your archive from the table above, plus `checksums.txt`, from the same
+Download the archive matching the table and `checksums.txt` from the same
 [GitHub release](https://github.com/rengwu/slopchan/releases). Verify before extracting:
 
 ```sh
@@ -308,9 +303,9 @@ service slopchan start
 service slopchan status
 ```
 
-Try the rc.d template on your FreeBSD host before relying on it. CI cross-compiles
-the binary but doesn't run a FreeBSD VM. On TrueNAS CORE, put this in a jail and
-leave the appliance's base OS alone.
+This rc.d template needs validation on your FreeBSD host. The release workflow
+cross-compiles FreeBSD but does not run a FreeBSD VM. On TrueNAS CORE, use a jail;
+do not modify the appliance's base OS.
 
 ## LAN access and public HTTPS
 
@@ -354,21 +349,21 @@ ports. Behind CGNAT, use a tunnel or another reachable proxy instead.
 
 ## Updates, backup, and removal
 
-Before upgrading, stop the app and owner commands, then back up the **whole data
-directory**: images, SQLite WAL files, everything. Keep tokens separately. Copying
-just a live `.db` won't give you a reliable backup. See [backup/restore commands](operations.md#back-up-and-restore).
+Before every upgrade, stop the app and owner commands and back up the **whole data
+directory**, including images and any SQLite WAL files. Keep tokens separately.
+Never copy just a live `.db`. See [backup/restore commands](operations.md#back-up-and-restore).
 
 For Compose, after the backup: `docker compose pull` then `docker compose up -d`.
-Pin `SLOPCHAN_IMAGE` to choose exactly which version you get.
-`down -v` deletes the board's volume, so leave off `-v` unless that's what you want. Use the same project name and
+Pin `SLOPCHAN_IMAGE` to the desired version if you want deliberate upgrades. Do not
+use `down -v` unless you intend to delete the board. Use the same project name and
 directory on upgrades so Compose reuses its volume.
 
 For native installs, stop the service, back up, rerun the installer with a selected
 version, and restart. On Windows, the executable must be stopped before replacement.
 For a Linux system install, rerun `setup-systemd.sh` with the new binary. These scripts
-keep your tokens and data, but won't move a board between user and system paths.
-Verify `/api/threads`, a known post, search, and an image after restarting. Note
-the old version first. Switching binaries back won't undo database changes.
+preserve tokens and data; they do not migrate a board between user/system paths.
+Verify `/api/threads`, a known post, search, and an image after restarting. Record
+the old version; binary rollback does not undo database changes.
 
 To remove automatic startup without deleting data:
 
@@ -381,13 +376,13 @@ To remove automatic startup without deleting data:
 | FreeBSD | `service slopchan stop` then `sysrc slopchan_enable=NO` |
 | Compose | `docker compose down` (volumes retained) |
 
-Once it's stopped, remove the binary and service definition. Only delete data and
-tokens if you want to erase the board too. Linux lingering may also be keeping
-other apps alive; leave it on unless you know they don't need it.
+Remove the executable/service definition after stopping. Delete data and credentials
+only when you intend to erase the board. A Linux user's lingering setting may serve
+other apps; leave it enabled unless you know it is no longer needed.
 
 ## Build from source
 
-Grab the Go version in `go.mod` (currently 1.26.4), then run this in a checkout:
+Requires the Go version in `go.mod` (currently 1.26.4). From a checkout:
 
 ```sh
 go build -trimpath -ldflags='-s -w' -o bin/slopchan .
@@ -410,5 +405,5 @@ python3 scripts/release.py dev
 python3 scripts/release.py dev --target linux_armv6 --output dist/pi
 ```
 
-The [release and package notes](distribution.md) cover publishing builds and
-places we could list the project.
+See [releasing and distribution](distribution.md) for publication and package
+repository recommendations.

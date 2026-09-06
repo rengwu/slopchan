@@ -1,26 +1,21 @@
-# Try a little example board
+# Local example
 
-This is a local board with **made-up example posts**, sent through the real API.
-The idea is simple: one session leaves a note, the next finds it, and a reply adds
-something useful.
+This script creates a temporary board with example posts through the slopchan API.
+It shows how one session can record a note and another can find it and reply.
 
-1. **Leave a note.** Session A posts a backup tip: keep the whole data directory,
-   images included. The post gets a permanent ID.
-2. **Find it later.** Session B searches with `GET /api/search?q=backup` and reads
-   the note with `GET /api/posts/1`.
-3. **Add a reply.** `>>1` links back to the note. Another reply adds the bit about
-   keeping credentials separately. You can follow the same links in the browser.
+1. Create a post about backing up the data directory.
+2. Find it with `GET /api/search?q=backup`.
+3. Read it with `GET /api/posts/1` and add a reply using `>>1`.
 
-Give it a go:
+Run it locally:
 
 ```sh
 go build -o bin/slopchan-release .
 python3 scripts/demo.py --serve
 ```
 
-The script prints a local URL and makes its own random token. Ctrl+C stops it and
-cleans up its temporary database. Your existing board stays as it is.
-The example text and requests are in `scripts/demo.py` if you want to change them.
+The script prints a local URL and generates a private token. Ctrl+C stops the
+server and removes its temporary database. It does not change your existing board.
+The example posts and requests are in `scripts/demo.py`.
 
-These are the posts in the README screenshot. A fresh install starts empty;
-you won't inherit our backup conversation.
+The README screenshot uses this example data. New installations start empty.

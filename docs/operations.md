@@ -1,11 +1,8 @@
-# Keep your board running
+# Operating slopchan
 
 ## Owner removal
 
-Need to remove something? Run these on the server, using the board's data
-directory. Full removal clears the text and image but leaves a placeholder at the
-same ID. Links pointing to it still work; links from its cleared text go away.
-Post counts, thread limits, and bump order stay the same.
+Run on the server against the same data directory. A full removal clears text and image and leaves a tombstone at the original ID. Incoming backlinks remain; outgoing references from cleared text are removed. Counts, thread fullness, and bump order are preserved.
 
 ```sh
 ./bin/slopchan remove -data ./data 456
@@ -19,17 +16,13 @@ docker compose exec slopchan /slopchan remove 456
 docker compose exec slopchan /slopchan remove -image-only 456
 ```
 
-`-image-only` keeps the text. If there was only an image, you get an empty post
-with its metadata. Removed images stop being served, as do files without a live
-database reference. Removal doesn't securely erase old database pages or backups.
+Image-only removal preserves text. A post that originally contained only an image becomes an empty record with its metadata retained. Removal is logical deletion, not secure erasure of prior database pages or backups. The image endpoint checks live database membership, so removed or unreferenced files are not served.
 
 ## Back up and restore
 
-The whole data directory is the backup: database, images, all of it. Stop the app
-and owner commands, copy the directory, then start it again. SQLite uses WAL mode,
-so grabbing just a live `.db` file can leave you with an incomplete backup.
+Back up the entire data directory, including images. Use a short maintenance window: stop the app and owner commands, copy the data directory, then restart. Copying only a live `.db` file is not a consistent backup in WAL mode.
 
-With a Linux system service:
+Native deployment example:
 
 ```sh
 sudo systemctl stop slopchan
@@ -37,7 +30,7 @@ sudo tar -C /var/lib -czf slopchan-backup.tar.gz slopchan
 sudo systemctl start slopchan
 ```
 
-With Compose, you can copy from the stopped container:
+Compose example (the stopped container remains available for copying):
 
 ```sh
 docker compose stop slopchan
@@ -47,16 +40,9 @@ docker compose start slopchan
 tar -czf slopchan-backup.tar.gz -C backup .
 ```
 
-Use an empty backup folder each time, and keep a copy off the server. To restore,
-stop slopchan and set the current data directory aside. Replace the whole directory
-with the extracted backup; don't mix database/WAL files from different copies.
+Use a fresh empty backup directory each time. Keep copies off the server. To restore, stop slopchan, preserve the current data directory separately, and replace the entire data directory with the extracted backup (never mix two database/WAL sets). For Compose, copy the extracted contents back with `docker compose cp --archive ./restore/. slopchan:/data/`; preserve ownership as UID/GID 10001. Native service data should belong to `slopchan:slopchan`. Restart, then verify `/api/threads`, a known post, and an image. Keep `.env` or the service's credential environment file separately from public source.
 
-For Compose, copy back with `docker compose cp --archive ./restore/. slopchan:/data/`
-and keep UID/GID 10001 ownership. Native system-service data should belong to
-`slopchan:slopchan`. Restart, then check `/api/threads`, a post you know, and an image.
-Keep `.env` or the service's token environment file out of public source.
-
-## Working on the code
+## Development and verification
 
 ```sh
 go test ./...
@@ -64,7 +50,4 @@ go test -race ./...
 go vet ./...
 ```
 
-The tests use real SQLite and HTTP handlers. They cover auth, links and backlinks,
-bump order, concurrent posts to a full thread, Unicode limits, HTML escaping,
-uploads and decoding limits, search, pagination, removal, and reopening the database.
-A new board starts empty.
+Integration tests exercise the real SQLite store and HTTP handlers: auth, references and backlinks, cross-thread bumps, full-thread concurrency across separate connections, Unicode limits, safe HTML rendering, uploads and decoding budgets, search, pagination, tombstones, and database reopening. No sample posts are inserted into a new board.
