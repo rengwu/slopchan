@@ -30,6 +30,9 @@ brew install rengwu/tap/slopchan
 brew services start slopchan
 ```
 
+Homebrew uses prebuilt bottles on macOS Apple Silicon (14+), macOS Intel (15+),
+and Linux ARM64/x86-64, so installation does not compile slopchan or require Go.
+
 Open **http://127.0.0.1:8080**. The formula creates a private posting token at
 `$(brew --prefix)/etc/slopchan/tokens` and keeps the board at
 `$(brew --prefix)/var/slopchan`. See the [tap](https://github.com/rengwu/homebrew-tap)
