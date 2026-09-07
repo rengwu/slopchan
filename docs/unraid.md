@@ -15,10 +15,10 @@ mkdir -p /boot/config/plugins/dockerMan/templates-user
 
 Keep appdata on a local SSD pool if available, with no Mover transfer while the application is running. This directory contains the live SQLite database and images; do not use an SMB/NFS mount. If importing an existing board, stop the source first and migrate the complete data directory using the [backup instructions](operations.md#back-up-and-restore). Its files must be owned by 99:100 for this template; the directory command above does not change ownership of existing files.
 
-From your computer, in this repository, copy the template to Unraid (replace `YOUR-NAS-IP`):
+In the same Unraid terminal, download the template directly:
 
 ```sh
-scp deploy/unraid/slopchan.xml root@YOUR-NAS-IP:/boot/config/plugins/dockerMan/templates-user/my-slopchan.xml
+wget -O /boot/config/plugins/dockerMan/templates-user/my-slopchan.xml https://raw.githubusercontent.com/rengwu/slopchan/main/deploy/unraid/slopchan.xml
 ```
 
 Then open **Docker → Add Container**, select the **slopchan** user template, and:
@@ -28,7 +28,7 @@ Then open **Docker → Add Container**, select the **slopchan** user template, a
 3. Click **Apply**, then enable **Autostart** for slopchan on the Docker page.
 4. Visit `http://YOUR-NAS-IP:8088` and confirm the board loads.
 
-The template can be installed directly from the public repository. You do not need a Community Apps listing or a GitHub login on Unraid once the GHCR package is public.
+No repository checkout, Community Apps listing, or GitHub login is required.
 
 ### Your existing Cloudflare Tunnel
 
