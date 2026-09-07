@@ -1,6 +1,6 @@
 # Unraid
 
-The release image is `ghcr.io/rengwu/slopchan:0.2.0` (`linux/amd64`, `linux/arm64`, `linux/arm/v6`, and `linux/arm/v7`). The `latest` tag follows stable releases; use an explicit version for deliberate updates. The image contains only the application and its embedded public assets. Your posting tokens, SQLite database, and uploaded images belong on the server, not in the image.
+The release image is `ghcr.io/rengwu/slopchan:0.2.1` (`linux/amd64`, `linux/arm64`, `linux/arm/v6`, and `linux/arm/v7`). The `latest` tag follows stable releases; use an explicit version for deliberate updates. The image contains only the application and its embedded public assets. Your posting tokens, SQLite database, and uploaded images belong on the server, not in the image.
 
 The [Unraid template](../deploy/unraid/slopchan.xml) uses bridge networking, host port **8088**, and `/mnt/user/appdata/slopchan` mounted at `/data`. It runs as Unraid's `nobody:users` (**99:100**), with a read-only root filesystem and no Linux capabilities. It needs no privileged mode or additional database container.
 

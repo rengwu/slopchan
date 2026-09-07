@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Container version="2">
   <Name>slopchan</Name>
-  <Repository>ghcr.io/rengwu/slopchan:0.2.0</Repository>
+  <Repository>ghcr.io/rengwu/slopchan:0.2.1</Repository>
   <Registry>https://github.com/rengwu/slopchan/pkgs/container/slopchan</Registry>
   <Network>bridge</Network>
   <Privileged>false</Privileged>

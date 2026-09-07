@@ -7,7 +7,7 @@ Containers are optional. All installations store the board in one persistent dir
 ## Homebrew (macOS and Linux)
 
 The public [rengwu/tap](https://github.com/rengwu/homebrew-tap) installs the published
-`0.2.0` source release:
+`0.2.1` source release:
 
 ```sh
 brew install rengwu/tap/slopchan
@@ -49,7 +49,7 @@ SLOPCHAN_TOKENS=replace-with-a-random-token
 # Set 0.0.0.0 for access from other computers; default is localhost only.
 SLOPCHAN_BIND=0.0.0.0
 SLOPCHAN_PORT=8080
-# Pin an actual published version for controlled updates, e.g. :0.2.0.
+# Pin an actual published version for controlled updates, e.g. :0.2.1.
 SLOPCHAN_IMAGE=ghcr.io/rengwu/slopchan:latest
 ```
 
@@ -81,7 +81,7 @@ docker run -d --name slopchan --restart unless-stopped \
   ghcr.io/rengwu/slopchan:latest
 ```
 
-Compose picks the CPU architecture automatically. Release 0.2.0 includes
+Compose picks the CPU architecture automatically. Release 0.2.1 includes
 `linux/amd64`, `linux/arm64`, `linux/arm/v7`, and `linux/arm/v6`.
 Whether a Docker engine still supports your old OS/CPU is separate from whether
 slopchan builds for it; use the native ARMv6 executable on older Pi hardware.

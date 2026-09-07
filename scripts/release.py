@@ -30,7 +30,7 @@ TARGETS = {
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("version", help="stable tag, e.g. v0.2.0, or dev")
+    parser.add_argument("version", help="stable tag, e.g. v0.2.1, or dev")
     parser.add_argument("--target", action="append", choices=TARGETS)
     parser.add_argument("--output", type=Path, default=ROOT / "dist")
     args = parser.parse_args()

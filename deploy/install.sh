@@ -1,6 +1,6 @@
 #!/bin/sh
 # Download a stable release, verify SHA-256, and install without root.
-# Usage: sh install.sh [v0.2.0] [--service]
+# Usage: sh install.sh [v0.2.1] [--service]
 set -eu
 version=latest
 service=no

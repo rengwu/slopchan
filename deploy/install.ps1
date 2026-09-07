@@ -1,5 +1,5 @@
 # Windows PowerShell 5.1+ / PowerShell 7. No Go, Docker, or administrator needed
-# for foreground installation. Usage: .\install.ps1 [-Version v0.2.0] [-AtLogon]
+# for foreground installation. Usage: .\install.ps1 [-Version v0.2.1] [-AtLogon]
 [CmdletBinding()]
 param(
     [ValidatePattern('^(latest|v[0-9]+\.[0-9]+\.[0-9]+)$')]

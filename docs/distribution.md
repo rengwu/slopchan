@@ -2,7 +2,7 @@
 
 Recommendations checked against the linked upstream documentation on **2026-09-06**.
 The [Homebrew tap](https://github.com/rengwu/homebrew-tap) is now available with a
-source formula for the published `0.2.0` release. Other marketplace entries below
+source formula for the published `0.2.1` release. Other marketplace entries below
 remain proposed distribution channels, not existing listings or submissions.
 
 ## Release workflow
@@ -59,7 +59,7 @@ GitHub release creation failed. Never replace a published version's assets silen
 | Priority | Repository / marketplace | Why it fits and submission work |
 | --- | --- | --- |
 | 1 | **GitHub Releases + GHCR** | Canonical native and container downloads; already automated here. Make downloads publicly accessible and publish the next tag. Mirror to Docker Hub later if users ask for it; that adds registry credentials and another publication destination. |
-| 1 | **Homebrew personal tap** ([rengwu/homebrew-tap](https://github.com/rengwu/homebrew-tap)) | Created: verified `0.2.0` source formula, automatic private token initialization, persistent storage, `brew services`, and an API/persistence test. Install with `brew install rengwu/tap/slopchan`. Maintain version bumps in the tap; bottles and Homebrew core submission remain future work. [Tap guide](https://docs.brew.sh/How-to-Create-and-Maintain-a-Tap), [formula/service cookbook](https://docs.brew.sh/Formula-Cookbook). |
+| 1 | **Homebrew personal tap** ([rengwu/homebrew-tap](https://github.com/rengwu/homebrew-tap)) | Created: verified `0.2.1` source formula, automatic private token initialization, persistent storage, `brew services`, and an API/persistence test. Install with `brew install rengwu/tap/slopchan`. Maintain version bumps in the tap; bottles and Homebrew core submission remain future work. [Tap guide](https://docs.brew.sh/How-to-Create-and-Maintain-a-Tap), [formula/service cookbook](https://docs.brew.sh/Formula-Cookbook). |
 | 1 | **Scoop personal bucket**, then `ScoopInstaller/Main` | Fits the portable Windows ZIP; no MSI is necessary. Generate x64/ARM64 URL and SHA-256 entries from each release, expose `slopchan.exe`, and document service setup separately. Keep mutable state under LocalAppData or use Scoop's persist mechanism, outside versioned package directories. [Buckets](https://github.com/ScoopInstaller/Scoop/wiki/Buckets), [Main repository](https://github.com/ScoopInstaller/Main). |
 | 1 | **Unraid Community Applications** | The existing XML is a good starting point. Prepare a public template repository, icon, screenshots, support/project URLs, and confirm storage permissions and the pinned image on Unraid. Follow the current maintainer intake process linked by the [Community Applications project](https://github.com/Squidly271/community.applications). |
 | 2 | **AUR**: `slopchan` and/or `slopchan-bin` | Offer a source PKGBUILD first, or `-bin` for the official archives. Include systemd integration, a dedicated system user through sysusers, license notices, and persistent state outside the package. Generate checksums and `.SRCINFO`; never use `SKIP` for release checksums. AUR hosts build recipes, not the compiled archive. [Submission guidelines](https://wiki.archlinux.org/title/AUR_submission_guidelines). |
