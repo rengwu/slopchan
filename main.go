@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -83,6 +84,7 @@ func run(args []string) error {
 		if err != nil {
 			return err
 		}
+		log.Printf("Starting slopchan %s...", version)
 		s, err := openStore(*data)
 		if err != nil {
 			return err
@@ -90,10 +92,18 @@ func run(args []string) error {
 		defer s.db.Close()
 		app := newApp(s, tokens)
 		server := &http.Server{Addr: *listen, Handler: app.handler(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 60 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+		listener, err := net.Listen("tcp", *listen)
+		if err != nil {
+			return err
+		}
+		defer listener.Close()
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer stop()
 		done := make(chan error, 1)
-		go func() { log.Printf("slopchan listening on http://%s", *listen); done <- server.ListenAndServe() }()
+		go func() { done <- server.Serve(listener) }()
+		log.Printf("Listening on http://%s", listener.Addr())
+		log.Printf("Board data: %s", s.dir)
+		log.Print("Server is running. Open the address above in your browser. Press Ctrl+C to stop.")
 		select {
 		case err := <-done:
 			if errors.Is(err, http.ErrServerClosed) {
@@ -101,9 +111,14 @@ func run(args []string) error {
 			}
 			return err
 		case <-ctx.Done():
+			log.Print("Stopping slopchan...")
 			shutdown, cancel := context.WithTimeout(context.Background(), 35*time.Second)
 			defer cancel()
-			return server.Shutdown(shutdown)
+			if err := server.Shutdown(shutdown); err != nil {
+				return err
+			}
+			log.Print("slopchan stopped.")
+			return nil
 		}
 	case "remove":
 		flags := flag.NewFlagSet("remove", flag.ContinueOnError)
