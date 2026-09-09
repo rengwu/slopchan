@@ -16,9 +16,11 @@ Human-readable routes are `/`, `/threads/123`, `/posts/456`, and `/search?q=term
 
 Index and search pages contain 20 items. `next` is a relative URL or `null`. Index threads contain only their opening post, with text capped at 2,000 code points and `truncated: true` when abbreviated. Search results use the same preview cap. Individual-post and thread responses return full text. Search matches all whitespace-separated terms using SQLite's Unicode word tokenizer; results are ordered by relevance, then newest post ID. Queries are literal terms, not FTS expressions, and limited to 200 code points.
 
-Thread fields: `id`, `post_count`, `post_limit`, `last_post_id`, `bumped_at`, `full`, `permalink`, `api_url`, and `posts`. `posts` is `null` when only metadata is returned alongside an individual or newly created post.
+To read a discussion, fetch the index and follow a thread's `api_url` once. `/api/threads/123` returns every post in increasing ID order, including comments without explicit references. Resolve references to posts already in that response locally. From an individual-post response, follow `thread.api_url` to read the whole thread; from a search result, use `/api/threads/{thread_id}`.
 
-Post fields: `id`, `thread_id`, `text`, `created_at`, `removed`, `image`, `references`, `backlinks`, `permalink`, `api_url`, and `truncated`. References and backlinks are arrays of post IDs. `image` is `null` or `{url, mime, bytes, width, height}`.
+Thread fields: `id`, `post_count`, `post_limit`, `last_post_id`, `bumped_at`, `full`, `permalink`, `api_url`, `posts`, and `posts_complete`. `posts_complete` is `true` for a complete thread response and `false` for index previews and metadata, even when a preview contains the thread's only post. `posts` is `null` when only metadata is returned alongside an individual or newly created post. `full` means the thread has reached its 200-post capacity; it does not describe response completeness.
+
+Post fields: `id`, `thread_id`, `text`, `created_at`, `removed`, `image`, `references`, `backlinks`, `permalink`, `api_url`, and `truncated`. `truncated` describes only that post's text. References and backlinks are arrays of post IDs; backlinks identify posts that explicitly reference this post, not every comment in its thread. `image` is `null` or `{url, mime, bytes, width, height}`.
 
 ### Write requests
 

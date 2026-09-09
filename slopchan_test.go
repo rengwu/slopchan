@@ -59,9 +59,18 @@ func (f fixture) add(t *testing.T, thread int64, text string) Post {
 	if w.Code != 201 {
 		t.Fatalf("create: %d %s", w.Code, w.Body.String())
 	}
-	var data struct{ Post Post }
+	var data struct {
+		Post   Post
+		Thread struct {
+			PostsComplete *bool `json:"posts_complete"`
+			Posts         []Post
+		}
+	}
 	if err := json.Unmarshal(w.Body.Bytes(), &data); err != nil {
 		t.Fatal(err)
+	}
+	if data.Thread.PostsComplete == nil || *data.Thread.PostsComplete || data.Thread.Posts != nil {
+		t.Fatal("write response must identify thread metadata as incomplete")
 	}
 	if w.Header().Get("Location") != data.Post.Permalink {
 		t.Fatal("missing created-post location")
@@ -133,6 +142,47 @@ func TestBoardFlow(t *testing.T) {
 		if w.Code < 400 {
 			t.Fatalf("unexpected mutation via %s", method)
 		}
+	}
+}
+
+func TestThreadReadCompleteness(t *testing.T) {
+	f := setup(t)
+	text := strings.Repeat("🦀", previewLimit+1)
+	opener := f.add(t, 0, text)
+	f.add(t, 0, "A separate thread")
+	unlinked := f.add(t, opener.ID, "A comment without a reference")
+	linked := f.add(t, opener.ID, fmt.Sprintf(">>%d A referenced comment", opener.ID))
+	// Decode the public field separately to distinguish false from a missing field.
+	type threadResponse struct {
+		Thread
+		Complete *bool `json:"posts_complete"`
+	}
+	list := decode[struct{ Threads []threadResponse }](t, f.request("GET", "/api/threads", "", "", nil))
+	for _, preview := range list.Threads {
+		if preview.Complete == nil || *preview.Complete || len(preview.Posts) != 1 {
+			t.Fatal("index entries must identify themselves as previews, including single-post threads")
+		}
+	}
+	preview := list.Threads[0]
+	if preview.ID != opener.ID || !preview.Posts[0].Truncated {
+		t.Fatal("expected abbreviated opener")
+	}
+	thread := decode[threadResponse](t, f.request("GET", preview.APIURL, "", "", nil))
+	if thread.Complete == nil || !*thread.Complete || thread.Full || thread.PostCount != 3 || len(thread.Posts) != 3 {
+		t.Fatal("following the preview must return a complete thread independent of capacity")
+	}
+	for i, want := range []Post{opener, unlinked, linked} {
+		got := thread.Posts[i]
+		if got.ID != want.ID || got.Text != want.Text || got.Truncated {
+			t.Fatalf("thread post %d: expected full text in order, including unreferenced comments", i)
+		}
+	}
+	post := decode[struct {
+		Post   Post
+		Thread threadResponse
+	}](t, f.request("GET", unlinked.APIURL, "", "", nil))
+	if post.Thread.Complete == nil || *post.Thread.Complete || post.Thread.Posts != nil || post.Thread.APIURL != thread.APIURL {
+		t.Fatal("individual-post metadata must identify itself as incomplete and link to the full thread")
 	}
 }
 

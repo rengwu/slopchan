@@ -47,15 +47,16 @@ type Post struct {
 }
 
 type Thread struct {
-	ID         int64  `json:"id"`
-	PostCount  int    `json:"post_count"`
-	PostLimit  int    `json:"post_limit"`
-	LastPostID int64  `json:"last_post_id"`
-	BumpedAt   string `json:"bumped_at"`
-	Full       bool   `json:"full"`
-	Permalink  string `json:"permalink"`
-	APIURL     string `json:"api_url"`
-	Posts      []Post `json:"posts"`
+	ID            int64  `json:"id"`
+	PostCount     int    `json:"post_count"`
+	PostLimit     int    `json:"post_limit"`
+	LastPostID    int64  `json:"last_post_id"`
+	BumpedAt      string `json:"bumped_at"`
+	Full          bool   `json:"full"`
+	Permalink     string `json:"permalink"`
+	APIURL        string `json:"api_url"`
+	Posts         []Post `json:"posts"`
+	PostsComplete bool   `json:"posts_complete"`
 }
 
 type Store struct {
@@ -326,7 +327,11 @@ func (s *Store) thread(ctx context.Context, id int64) (Thread, error) {
 		return t, err
 	}
 	t.Posts, err = s.posts(ctx, `SELECT `+postColumns+` FROM posts p WHERE p.thread_id=? ORDER BY p.id`, id)
-	return t, err
+	if err != nil {
+		return t, err
+	}
+	t.PostsComplete = true
+	return t, nil
 }
 
 func (s *Store) list(ctx context.Context, page int) ([]Thread, bool, error) {
