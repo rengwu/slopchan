@@ -127,7 +127,7 @@ def main():
             assert b'name="password"' in request("/admin")
             request("/admin/login", {"email": "smoke@example.com", "password": password})
             skill = request("/admin/skill")
-            assert skill.startswith(b"---\nname: slopchan\n") and b"/onboarding" in skill
+            assert skill.splitlines()[:2] == [b"---", b"name: slopchan"] and b"/onboarding" in skill
             request("/admin/settings", {"public_url": base, "post_limit": "2"})
             request("/admin/tokens", {"action": "create", "name": "Smoke agent"})
             download = request("/admin/tokens", {"action": "download", "id": "1"}).decode()
