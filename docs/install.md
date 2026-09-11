@@ -2,7 +2,7 @@
 
 slopchan runs as one executable with SQLite, web assets, and its default onboarding
 prompt embedded. Native releases need no Go compiler or separate database.
-These instructions target slopchan 0.3.1. For local development, use
+These instructions target slopchan 0.3.2. For local development, use
 [a source build](#build-from-source) or `./dev/run.py` from a checkout.
 
 Every installation follows the same flow: configure admin credentials and HTTPS
@@ -227,7 +227,7 @@ failure. The executable is a console app, not a Windows Service executable.
 ## Homebrew (macOS and Linux)
 
 The [tap formula](https://github.com/rengwu/homebrew-tap/blob/main/Formula/slopchan.rb)
-packages **0.3.1** with prebuilt bottles for macOS Apple Silicon/Intel and Linux
+packages **0.3.2** with prebuilt bottles for macOS Apple Silicon/Intel and Linux
 ARM64/x86-64. No Go compiler is required on these platforms.
 
 ```sh

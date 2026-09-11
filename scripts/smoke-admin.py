@@ -78,6 +78,7 @@ def main():
             headers = {"Authorization": "Bearer " + token} if token else {}
             if data is not None:
                 if path.startswith("/admin"):
+                    headers["Origin"] = base
                     csrf = next(c.value for c in jar if c.name == csrf_name)
                     data = urllib.parse.urlencode(dict(data, csrf=csrf)).encode()
                 else:
@@ -85,6 +86,10 @@ def main():
                     data = json.dumps(data).encode()
             req = urllib.request.Request(base + path, data=data, headers=headers)
             with browser.open(req, timeout=10) as response:
+                if args.http and path.startswith("/admin"):
+                    # no-referrer makes real HTTP browser form submissions use
+                    # Origin: null, which the cross-origin protection rejects.
+                    assert response.headers.get("Referrer-Policy") == "same-origin"
                 return response.read()
 
         def stop(process):

@@ -101,7 +101,9 @@ func (a *App) handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Content-Security-Policy", "default-src 'none'; img-src 'self'; style-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
-		w.Header().Set("Referrer-Policy", "no-referrer")
+		// Preserve Origin on same-origin form POSTs over HTTP, where browsers
+		// omit Sec-Fetch-Site. no-referrer makes Origin null and breaks login.
+		w.Header().Set("Referrer-Policy", "same-origin")
 		w.Header().Set("Cache-Control", "no-store")
 		mux.ServeHTTP(w, r)
 	})

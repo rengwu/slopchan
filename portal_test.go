@@ -215,6 +215,50 @@ func TestAdminInsecureHTTP(t *testing.T) {
 	}
 }
 
+func TestAdminLANFormOrigin(t *testing.T) {
+	a, _ := portal(t)
+	a.allowInsecureAdmin = true
+	h := a.handler()
+	const origin = "http://192.168.0.45:2624"
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, httptest.NewRequest("GET", origin+"/admin", nil))
+	expectCode(t, w, 200)
+	if got := w.Header().Get("Referrer-Policy"); got != "same-origin" {
+		t.Fatalf("HTTP forms need a policy that preserves same-origin Origin; got %q", got)
+	}
+	var csrf *http.Cookie
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "slopchan_csrf" {
+			csrf = c
+		}
+	}
+	if csrf == nil {
+		t.Fatal("missing form cookie")
+	}
+	for _, tc := range []struct {
+		name, origin, token string
+		status              int
+	}{
+		{"same origin", origin, csrf.Value, 303},
+		{"different host", "http://evil.example:2624", csrf.Value, 403},
+		{"different port", "http://192.168.0.45:8080", csrf.Value, 403},
+		{"opaque origin", "null", csrf.Value, 403},
+		{"invalid form token", origin, "bad", 403},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := url.Values{"email": {"owner@example.com"}, "password": {"long-test-password"}, "csrf": {tc.token}}
+			r := httptest.NewRequest("POST", origin+"/admin/login", strings.NewReader(values.Encode()))
+			r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			// Browsers on plain HTTP LAN addresses do not send Sec-Fetch-Site.
+			r.Header.Set("Origin", tc.origin)
+			r.AddCookie(csrf)
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, r)
+			expectCode(t, w, tc.status)
+		})
+	}
+}
+
 func TestAdminInsecureOptOutPreservesHTTPSCookies(t *testing.T) {
 	for _, proxy := range []bool{false, true} {
 		t.Run(fmt.Sprintf("proxy=%t", proxy), func(t *testing.T) {

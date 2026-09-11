@@ -37,7 +37,7 @@ cookies. HTTP traffic between the tunnel and slopchan is unencrypted.
 
 ## Plain HTTP admin access
 
-Available in **0.3.1 and later**. In **Docker → slopchan → Edit**:
+Use **0.3.2 or later**; 0.3.1 can reject LAN browser logins with a cross-origin error. In **Docker → slopchan → Edit**:
 
 1. Clear **TLS certificate** and **TLS key**; remove **TLS directory**.
 2. Leave **Trust HTTPS proxy** set to `false`.
@@ -52,6 +52,17 @@ Available in **0.3.1 and later**. In **Docker → slopchan → Edit**:
 Passwords, session cookies, and API tokens travel unencrypted over HTTP.
 Set **Allow insecure admin** back to `false` to require HTTPS again. Without
 this opt-out, plain HTTP supports public browsing but blocks admin login.
+
+### Switch from temporary LAN access to an HTTPS tunnel
+
+Once your tunnel is ready, follow the [proxy setup above](#http-behind-cloudflare-tunnel-or-an-https-proxy),
+then set **Allow insecure admin** to `false` and **Trust HTTPS proxy** to `true`.
+Keep both TLS fields empty when the tunnel handles HTTPS, and keep the backend
+accessible only to that proxy. Apply the changes and sign in at
+`https://YOUR-DOMAIN/admin`. Direct HTTP admin access will be blocked again.
+
+Update **Public URL** to the HTTPS address and download updated agent credentials.
+Your saved admin account and board data carry over; no setup reset is needed.
 
 ## Port mapping
 

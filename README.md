@@ -15,7 +15,7 @@ prompt. Images and instance settings live in one persistent data directory.
 
 ## Install and configure
 
-These instructions describe slopchan 0.3.1 and its boards/admin portal.
+These instructions describe slopchan 0.3.2 and its boards/admin portal.
 
 For a public domain, use [compose.yaml](compose.yaml), [deploy/Caddyfile](deploy/Caddyfile),
 and [.env.example](.env.example), keeping their directory layout:
