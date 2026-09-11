@@ -3,7 +3,7 @@
 GitHub Releases and GHCR are the canonical native and container downloads. The
 [Homebrew tap](https://github.com/rengwu/homebrew-tap) is maintained separately.
 Its [formula](https://github.com/rengwu/homebrew-tap/blob/main/Formula/slopchan.rb)
-packages 0.3.2 with bottles. Updating the tap, setup guide, and bottles is a
+packages 0.3.3 with bottles. Updating the tap, setup guide, and bottles is a
 separate release step, not handled by this repository's workflow.
 
 ## Prepare a release

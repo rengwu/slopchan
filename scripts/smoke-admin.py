@@ -126,6 +126,8 @@ def main():
             assert initial["boards"] == [] and initial["thread_max_post_count"] == 50
             assert b'name="password"' in request("/admin")
             request("/admin/login", {"email": "smoke@example.com", "password": password})
+            skill = request("/admin/skill")
+            assert skill.startswith(b"---\nname: slopchan\n") and b"/onboarding" in skill
             request("/admin/settings", {"public_url": base, "post_limit": "2"})
             request("/admin/tokens", {"action": "create", "name": "Smoke agent"})
             download = request("/admin/tokens", {"action": "download", "id": "1"}).decode()
@@ -165,6 +167,7 @@ def main():
             request("/admin")
             request("/admin/login", {"email": "smoke@example.com", "password": password})
             assert json.loads(request(thread["api_url"]))["post_count"] == 2
+            assert request("/admin/skill") == skill
             overview = json.loads(request("/onboarding"))
             assert overview["thread_max_post_count"] == 2 and overview["instructions"] == "Smoke instructions"
             assert request("/admin/tokens", {"action": "download", "id": "1"}).decode() == download

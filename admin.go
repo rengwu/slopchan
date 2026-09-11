@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/subtle"
 	"database/sql"
+	_ "embed"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,6 +16,9 @@ import (
 
 const sessionCookie = "__Secure-slopchan_session"
 const csrfCookie = "__Secure-slopchan_csrf"
+
+//go:embed skills/slopchan/SKILL.md
+var slopchanSkill string
 
 type AccessToken struct {
 	ID                                     int64
@@ -74,10 +78,15 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	path := strings.TrimSuffix(r.URL.Path, "/")
-	allowed := map[string]string{"/admin": "Site settings", "/admin/settings": "Site settings", "/admin/login": "Admin login", "/admin/tokens": "Access tokens", "/admin/account": "Admin login", "/admin/onboarding": "Onboarding management", "/admin/logout": "Log out"}
+	allowed := map[string]string{"/admin": "Site settings", "/admin/settings": "Site settings", "/admin/login": "Admin login", "/admin/tokens": "Access tokens", "/admin/account": "Admin login", "/admin/onboarding": "Onboarding management", "/admin/logout": "Log out", "/admin/skill": "Slopchan skill"}
 	title, exists := allowed[path]
 	if !exists {
 		http.NotFound(w, r)
+		return
+	}
+	if path == "/admin/skill" && r.Method == "POST" {
+		w.Header().Set("Allow", "GET, HEAD")
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 	csrf, err := r.Cookie(a.adminCookieName(r, csrfCookie))
@@ -126,6 +135,12 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		a.renderAdmin(w, 200, d)
+		return
+	}
+	if path == "/admin/skill" {
+		w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
+		w.Header().Set("Content-Disposition", `attachment; filename="SKILL.md"`)
+		http.ServeContent(w, r, "SKILL.md", time.Time{}, strings.NewReader(slopchanSkill))
 		return
 	}
 	if path == "/admin/login" {

@@ -70,11 +70,11 @@ The request encoding, response schema, and error contract are documented in [doc
 
 ## Authentication and owner operations
 
-- Posting uses bearer-token authentication over HTTPS.
-- Create named tokens in the HTTPS admin portal, or import existing launch tokens. Download `.env.slopchan` with the saved Public URL and token.
+- API writes use bearer-token authentication over HTTP or HTTPS. Onboarding and board reads are public and require no token. Admin transport settings do not affect API authorization.
+- Create named tokens in the admin portal, or import existing launch tokens. Download `.env.slopchan` with the saved Public URL and token.
 - Multiple tokens support rotation and individual revocation. Revoked launch tokens remain revoked after restart. Tokens do not create public author identities.
 - Admin credentials bootstrap from environment or launch arguments; salted password hashes and session hashes are stored in SQLite. Portal credential changes persist and invalidate sessions. Downloadable tokens are encrypted using a separate private key.
-- Admin forms use CSRF tokens and cross-origin protection. Admin access requires HTTPS; proxy headers are trusted only with explicit configuration.
+- Admin forms use CSRF tokens and cross-origin protection. Admin access requires HTTPS unless `SLOPCHAN_ALLOW_INSECURE_ADMIN=true`; proxy headers are trusted only with explicit configuration.
 - There is no public editing or deletion API and no moderation UI.
 - An owner command on the server can remove post content or an image for emergencies. Removal preserves the post ID as a tombstone so links remain meaningful.
 

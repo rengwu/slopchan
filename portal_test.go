@@ -215,6 +215,98 @@ func TestAdminInsecureHTTP(t *testing.T) {
 	}
 }
 
+func TestAPITransportIndependentOfAdminSettings(t *testing.T) {
+	for _, scheme := range []string{"http", "https"} {
+		for _, allowInsecure := range []bool{false, true} {
+			for _, trustProxy := range []bool{false, true} {
+				t.Run(fmt.Sprintf("%s/insecure-admin=%t/trust-proxy=%t", scheme, allowInsecure, trustProxy), func(t *testing.T) {
+					a, _ := portal(t)
+					a.allowInsecureAdmin, a.trustProxy = allowInsecure, trustProxy
+					f := fixture{a.store, a.handler()}
+					origin := scheme + "://board.example"
+					adminStatus := http.StatusOK
+					if scheme == "http" && !allowInsecure {
+						adminStatus = http.StatusUpgradeRequired
+					}
+					expectCode(t, f.request("GET", origin+"/admin", "", "", nil), adminStatus)
+					w := f.request("POST", origin+"/api/boards", "application/json", "legacy-token", strings.NewReader(`{"name":"Transport"}`))
+					expectCode(t, w, http.StatusCreated)
+					var boardResponse struct{ Board Board }
+					if err := json.Unmarshal(w.Body.Bytes(), &boardResponse); err != nil {
+						t.Fatal(err)
+					}
+					boardThreads := boardResponse.Board.APIURL
+					w = f.request("POST", origin+boardThreads, "application/json", "legacy-token", strings.NewReader(`{"text":"Transport test"}`))
+					expectCode(t, w, http.StatusCreated)
+					var threadResponse struct{ Post Post }
+					if err := json.Unmarshal(w.Body.Bytes(), &threadResponse); err != nil {
+						t.Fatal(err)
+					}
+					thread := fmt.Sprintf("/api/threads/%d", threadResponse.Post.ThreadID)
+					writes := []string{"/api/boards", "/api/threads", boardThreads, thread + "/posts"}
+					for _, path := range writes[1:] {
+						expectCode(t, f.request("POST", origin+path, "application/json", "legacy-token", strings.NewReader(`{"text":"Accepted with token"}`)), http.StatusCreated)
+					}
+					if _, err := a.store.db.Exec(`UPDATE access_tokens SET revoked_at='2026-09-11T00:00:00Z'`); err != nil {
+						t.Fatal(err)
+					}
+					for _, token := range []string{"", "invalid-token", "legacy-token"} {
+						for _, path := range []string{"/onboarding", "/api/boards", "/api/threads", boardThreads, thread, fmt.Sprintf("/api/posts/%d", threadResponse.Post.ID), "/api/search?q=Transport"} {
+							expectCode(t, f.request("GET", origin+path, "", token, nil), http.StatusOK)
+						}
+						for _, path := range writes {
+							expectCode(t, f.request("POST", origin+path, "application/json", token, strings.NewReader(`{"text":"Rejected without valid token"}`)), http.StatusUnauthorized)
+						}
+					}
+				})
+			}
+		}
+	}
+}
+
+func TestAdminSkillDownload(t *testing.T) {
+	want, err := os.ReadFile("skills/slopchan/SKILL.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Downloads must work without a source checkout beside the executable.
+	t.Chdir(t.TempDir())
+	for _, insecure := range []bool{false, true} {
+		t.Run(fmt.Sprintf("http=%t", insecure), func(t *testing.T) {
+			a, b := portal(t)
+			b.insecure = insecure
+			if insecure {
+				expectCode(t, b.req("GET", "/admin/skill", nil), http.StatusUpgradeRequired)
+				a.allowInsecureAdmin = true
+			}
+			expectCode(t, b.req("GET", "/admin/skill", nil), http.StatusSeeOther)
+			b.login(t)
+			page := b.req("GET", "/admin/tokens", nil)
+			expectCode(t, page, http.StatusOK)
+			button := strings.Index(page.Body.String(), `action="/admin/skill"`)
+			if button < strings.Index(page.Body.String(), "</table>") || !strings.Contains(page.Body.String(), "Get slopchan skill") {
+				t.Fatal("missing skill download button below token table")
+			}
+			w := b.req("GET", "/admin/skill", nil)
+			expectCode(t, w, http.StatusOK)
+			if !bytes.Equal(w.Body.Bytes(), want) {
+				t.Fatal("download differs from the packaged skill")
+			}
+			if w.Header().Get("Content-Disposition") != `attachment; filename="SKILL.md"` || w.Header().Get("Content-Type") != "text/markdown; charset=utf-8" || w.Header().Get("Cache-Control") != "no-store" {
+				t.Fatalf("invalid download headers: %v", w.Header())
+			}
+			head := b.req("HEAD", "/admin/skill", nil)
+			expectCode(t, head, http.StatusOK)
+			if head.Body.Len() != 0 || head.Header().Get("Content-Length") != fmt.Sprint(len(want)) {
+				t.Fatal("invalid HEAD response")
+			}
+			expectCode(t, b.req("POST", "/admin/skill", nil), http.StatusMethodNotAllowed)
+			expectCode(t, b.req("POST", "/admin/logout", nil), http.StatusSeeOther)
+			expectCode(t, b.req("GET", "/admin/skill", nil), http.StatusSeeOther)
+		})
+	}
+}
+
 func TestAdminLANFormOrigin(t *testing.T) {
 	a, _ := portal(t)
 	a.allowInsecureAdmin = true
