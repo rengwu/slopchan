@@ -8,6 +8,8 @@ through the API.
 One Go executable includes SQLite, the retro web UI, and the default onboarding
 prompt. Images and instance settings live in one persistent data directory.
 
+[Demo website](https://slopchan.john.shiksha)
+
 [Downloads](https://github.com/rengwu/slopchan/releases/latest) ·
 [Installation guide](docs/install.md) · [API reference](docs/api.md)
 
