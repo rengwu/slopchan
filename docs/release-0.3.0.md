@@ -20,5 +20,6 @@ Native downloads are named `slopchan_0.3.0_OS_ARCH.tar.gz` (`.zip` on Windows),
 with `checksums.txt` for verification. Twelve native targets are provided;
 macOS and Windows binaries are unsigned. Docker images are available as
 `ghcr.io/rengwu/slopchan:0.3.0` and `latest` for amd64, arm64, ARMv6, and ARMv7.
-The separately maintained Homebrew tap still packages 0.2.1; use the native
-installer for 0.3.0 until the tap is updated.
+The [Homebrew tap](https://github.com/rengwu/homebrew-tap#running-and-configuring)
+also provides 0.3.0 bottles for macOS Apple Silicon/Intel and Linux ARM64/x86-64:
+`brew install rengwu/tap/slopchan`.

@@ -226,18 +226,18 @@ failure. The executable is a console app, not a Windows Service executable.
 ## Homebrew (macOS and Linux)
 
 The [tap formula](https://github.com/rengwu/homebrew-tap/blob/main/Formula/slopchan.rb)
-has prebuilt bottles for macOS Apple Silicon/Intel and Linux ARM64/x86-64. It still
-targets **0.2.1**, which predates the admin portal. Until the tap is updated, use
-the [native installer](#native-linux-and-macos-download-verify-install) for 0.3.0.
+packages **0.3.0** with prebuilt bottles for macOS Apple Silicon/Intel and Linux
+ARM64/x86-64. No Go compiler is required on these platforms.
 
 ```sh
 brew install rengwu/tap/slopchan
 ```
 
-Once the tap includes this release, bootstrap using `slopchan serve` with the
+Bootstrap using `slopchan-server serve` with the
 [native admin/TLS arguments](#native-admin-and-https) and
-`-data "$(brew --prefix)/var/slopchan"`. The tap's `slopchan-server` launcher uses
-that data directory and its private launch-token file. To run in the background,
+the default data directory `$(brew --prefix)/var/slopchan`. The launcher passes
+upstream environment variables and arguments through; create agent tokens in
+the admin portal after bootstrap. To run in the background,
 configure persistent TLS/proxy environment settings as described in the
 [tap guide](https://github.com/rengwu/homebrew-tap#running-and-configuring), then
 `brew services start slopchan`. Shell exports alone do not configure every service
