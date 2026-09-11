@@ -77,6 +77,7 @@ func run(args []string) error {
 		adminPasswordFile := flags.String("admin-password-file", env("SLOPCHAN_ADMIN_PASSWORD_FILE", ""), "file containing initial admin password")
 		adminReset := flags.Bool("reset-admin", false, "replace saved admin credentials with supplied credentials and log out all sessions")
 		trustProxy := flags.Bool("trust-proxy", env("SLOPCHAN_TRUST_PROXY", "false") == "true", "trust X-Forwarded-Proto from an HTTPS proxy; restrict direct access to the backend")
+		allowInsecureAdmin := flags.Bool("allow-insecure-admin", env("SLOPCHAN_ALLOW_INSECURE_ADMIN", "false") == "true", "allow admin access over unencrypted HTTP (default: require HTTPS)")
 		tlsCert := flags.String("tls-cert", env("SLOPCHAN_TLS_CERT", ""), "TLS certificate file")
 		tlsKey := flags.String("tls-key", env("SLOPCHAN_TLS_KEY", ""), "TLS private key file")
 		if err := flags.Parse(args); err != nil {
@@ -150,6 +151,7 @@ func run(args []string) error {
 			return err
 		}
 		app.trustProxy = *trustProxy
+		app.allowInsecureAdmin = *allowInsecureAdmin
 		server := &http.Server{Addr: *listen, Handler: app.handler(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 60 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 		listener, err := net.Listen("tcp", *listen)
 		if err != nil {

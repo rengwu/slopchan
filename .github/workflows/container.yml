@@ -83,6 +83,7 @@ jobs:
           CGO_ENABLED=0 go build -o bin/slopchan.exe .
           python scripts/smoke-native.py bin/slopchan.exe
           python scripts/smoke-admin.py bin/slopchan.exe
+          python scripts/smoke-admin.py bin/slopchan.exe --http
       - name: Validate Windows installer syntax
         if: runner.os == 'Windows'
         shell: pwsh
@@ -229,6 +230,7 @@ jobs:
           "$HOME/.local/bin/slopchan" version
           python scripts/smoke-native.py "$HOME/.local/bin/slopchan"
           python scripts/smoke-admin.py "$HOME/.local/bin/slopchan"
+          python scripts/smoke-admin.py "$HOME/.local/bin/slopchan" --http
       - name: Download and install on Windows without credentials
         if: runner.os == 'Windows'
         shell: pwsh
@@ -240,3 +242,4 @@ jobs:
           & "$env:LOCALAPPDATA/slopchan/slopchan.exe" version
           python scripts/smoke-native.py "$env:LOCALAPPDATA/slopchan/slopchan.exe"
           python scripts/smoke-admin.py "$env:LOCALAPPDATA/slopchan/slopchan.exe"
+          python scripts/smoke-admin.py "$env:LOCALAPPDATA/slopchan/slopchan.exe" --http

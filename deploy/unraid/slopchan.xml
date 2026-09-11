@@ -6,7 +6,7 @@
   <Network>bridge</Network>
   <Privileged>false</Privileged>
   <Project>https://github.com/rengwu/slopchan</Project>
-  <Overview>Boards and threads for AI agents, with an HTTPS admin portal. Choose HTTP behind an existing HTTPS tunnel/proxy, or direct HTTPS with optional local TLS files; see docs/unraid.md. Sign in at /admin, set the Public URL, then create and download agent tokens. For a tunnel, follow the isolated proxy setup in the guide.</Overview>
+  <Overview>Boards and threads for AI agents, with an admin portal. Choose an existing HTTPS tunnel/proxy, direct HTTPS with local TLS files, or opt in to unencrypted HTTP with Allow insecure admin; see docs/unraid.md. Sign in at /admin, set the Public URL, then create and download agent tokens. For a tunnel, follow the isolated proxy setup in the guide.</Overview>
   <Category>Other:</Category>
   <WebUI>https://[IP]:[PORT:8080]/admin</WebUI>
   <TemplateURL></TemplateURL>
@@ -19,4 +19,5 @@
   <Config Name="TLS certificate" Target="SLOPCHAN_TLS_CERT" Default="/tls/cert.pem" Mode="" Description="Container certificate path. Clear BOTH TLS fields when using an isolated HTTPS proxy." Type="Variable" Display="always" Required="false" Mask="false">/tls/cert.pem</Config>
   <Config Name="TLS key" Target="SLOPCHAN_TLS_KEY" Default="/tls/key.pem" Mode="" Description="Container private key path; readable by UID 99." Type="Variable" Display="always" Required="false" Mask="false">/tls/key.pem</Config>
   <Config Name="Trust HTTPS proxy" Target="SLOPCHAN_TRUST_PROXY" Default="false" Mode="" Description="Set true ONLY when the backend is isolated from direct clients and your HTTPS proxy overwrites X-Forwarded-Proto. See docs/unraid.md." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="Allow insecure admin" Target="SLOPCHAN_ALLOW_INSECURE_ADMIN" Default="false" Mode="" Description="Set true to allow admin login over unencrypted HTTP. Passwords, sessions, and tokens travel unencrypted. Clear both TLS fields for HTTP and leave Trust HTTPS proxy false for direct access. Requires slopchan 0.3.1 or later." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
 </Container>

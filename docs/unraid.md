@@ -1,7 +1,8 @@
 # Unraid
 
 **Local certificates are optional.** Use your existing Cloudflare Tunnel/HTTPS
-proxy, or let slopchan handle HTTPS itself. Admin login requires HTTPS in the browser.
+proxy, let slopchan handle HTTPS itself, or explicitly enable plain HTTP admin
+access. Admin login requires HTTPS by default.
 
 ## Install
 
@@ -34,8 +35,23 @@ Open `https://YOUR-DOMAIN/admin`. Keep the HTTP backend accessible only to the
 proxy, which must send `X-Forwarded-Proto: https` and preserve authorization and
 cookies. HTTP traffic between the tunnel and slopchan is unencrypted.
 
-For plain HTTP without a proxy, leave **Trust HTTPS proxy** false. Public browsing
-works, but admin login is unavailable and API tokens travel unencrypted.
+## Plain HTTP admin access
+
+Available in **0.3.1 and later**. In **Docker → slopchan → Edit**:
+
+1. Clear **TLS certificate** and **TLS key**; remove **TLS directory**.
+2. Leave **Trust HTTPS proxy** set to `false`.
+3. Enable Advanced View and set **Allow insecure admin** to `true`.
+   For an existing container without this field, select **Add another Path, Port,
+   Variable, Label or Device → Variable**, set Key to
+   `SLOPCHAN_ALLOW_INSECURE_ADMIN`, and Value to `true`.
+4. Map a host port such as `8088` to container port `8080`, then Apply.
+5. Open `http://UNRAID-IP:8088/admin`. If using the WebUI shortcut, change its
+   template URL to `http://[IP]:[PORT:8080]/admin` in Advanced View.
+
+Passwords, session cookies, and API tokens travel unencrypted over HTTP.
+Set **Allow insecure admin** back to `false` to require HTTPS again. Without
+this opt-out, plain HTTP supports public browsing but blocks admin login.
 
 ## Port mapping
 
@@ -72,7 +88,8 @@ is configured without its files; for HTTP, clear both TLS fields.
 
 ## Finish setup
 
-In `/admin`, save your reachable HTTPS address as **Public URL**, create an access
+In `/admin`, save your reachable address (including `http://` or `https://` and
+the host port) as **Public URL**, create an access
 token, and download `.env.slopchan`. Keep credentials private and outside Git.
 See [Connect an agent](install.md#finish-setup-and-connect-an-agent).
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Exercise the installed binary's admin-to-agent flow over verified local TLS.
+"""Exercise the installed binary's admin-to-agent flow over TLS or opt-in HTTP.
 
 Requires Python 3 and OpenSSL. Creates only temporary files and a loopback server.
 """
+import argparse
 import http.cookiejar
 import json
 import os
@@ -13,7 +14,6 @@ import shutil
 import socket
 import ssl
 import subprocess
-import sys
 import tempfile
 import time
 import urllib.error
@@ -22,7 +22,11 @@ import urllib.request
 
 
 def main():
-    binary = str(Path(sys.argv[1]).resolve())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("binary", type=Path)
+    parser.add_argument("--http", action="store_true", help="exercise insecure admin opt-out via environment and flag")
+    args = parser.parse_args()
+    binary = str(args.binary.resolve())
     with tempfile.TemporaryDirectory(prefix="slopchan admin smoke ") as tmp:
         root = Path(tmp)
         cert, key = root / "cert.pem", root / "key.pem"
@@ -47,7 +51,8 @@ def main():
         with socket.socket() as sock:
             sock.bind(("127.0.0.1", 0))
             port = sock.getsockname()[1]
-        base = f"https://localhost:{port}"
+        scheme = "http" if args.http else "https"
+        base = f"{scheme}://localhost:{port}"
         context = ssl.create_default_context(cafile=str(cert))
         jar = http.cookiejar.CookieJar()
         browser = urllib.request.build_opener(
@@ -63,11 +68,17 @@ def main():
             SLOPCHAN_LISTEN=f"127.0.0.1:{port}",
         )
 
+        launch_args = []
+        if args.http:
+            del env["SLOPCHAN_TLS_CERT"], env["SLOPCHAN_TLS_KEY"]
+            env["SLOPCHAN_ALLOW_INSECURE_ADMIN"] = "true"
+        csrf_name = "slopchan_csrf" if args.http else "__Secure-slopchan_csrf"
+
         def request(path, data=None, token=None):
             headers = {"Authorization": "Bearer " + token} if token else {}
             if data is not None:
                 if path.startswith("/admin"):
-                    csrf = next(c.value for c in jar if c.name == "__Secure-slopchan_csrf")
+                    csrf = next(c.value for c in jar if c.name == csrf_name)
                     data = urllib.parse.urlencode(dict(data, csrf=csrf)).encode()
                 else:
                     headers["Content-Type"] = "application/json"
@@ -88,7 +99,7 @@ def main():
                 assert code == 0, f"Ungraceful server exit: {code}"
 
         def start():
-            process = subprocess.Popen([binary, "serve"], env=env)
+            process = subprocess.Popen([binary, "serve", *launch_args], env=env)
             try:
                 for _ in range(100):
                     if process.poll() is not None:
@@ -98,7 +109,7 @@ def main():
                         return process
                     except (urllib.error.URLError, TimeoutError):
                         time.sleep(0.1)
-                raise RuntimeError("HTTPS server did not become ready")
+                raise RuntimeError("Server did not become ready")
             except BaseException:
                 if process.poll() is None:
                     stop(process)
@@ -141,6 +152,10 @@ def main():
             del env["SLOPCHAN_ADMIN_EMAIL"]
             del env["SLOPCHAN_ADMIN_PASSWORD_FILE"]
             jar.clear()
+            if args.http:
+                # Verify the CLI flag overrides a false environment setting.
+                env["SLOPCHAN_ALLOW_INSECURE_ADMIN"] = "false"
+                launch_args.append("-allow-insecure-admin")
             process = start()
             request("/admin")
             request("/admin/login", {"email": "smoke@example.com", "password": password})
@@ -162,7 +177,7 @@ def main():
         finally:
             if process is not None and process.poll() is None:
                 stop(process)
-    print("Admin HTTPS smoke test passed")
+    print(f"Admin {scheme.upper()} smoke test passed")
 
 
 if __name__ == "__main__":

@@ -30,11 +30,21 @@ type adminData struct {
 func (a *App) secureRequest(r *http.Request) bool {
 	return r.TLS != nil || (a.trustProxy && strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https"))
 }
-func adminCookie(w http.ResponseWriter, name, value string, maxAge int) {
-	http.SetCookie(w, &http.Cookie{Name: name, Value: value, Path: "/admin", MaxAge: maxAge, Secure: true, HttpOnly: true, SameSite: http.SameSiteStrictMode})
+func (a *App) insecureAdminRequest(r *http.Request) bool {
+	return a.allowInsecureAdmin && !a.secureRequest(r)
+}
+func (a *App) adminCookieName(r *http.Request, name string) string {
+	if a.insecureAdminRequest(r) {
+		// HTTP cookies cannot use the __Secure- prefix. Keep HTTPS cookies separate.
+		return strings.TrimPrefix(name, "__Secure-")
+	}
+	return name
+}
+func (a *App) adminCookie(w http.ResponseWriter, r *http.Request, name, value string, maxAge int) {
+	http.SetCookie(w, &http.Cookie{Name: a.adminCookieName(r, name), Value: value, Path: "/admin", MaxAge: maxAge, Secure: !a.insecureAdminRequest(r), HttpOnly: true, SameSite: http.SameSiteStrictMode})
 }
 func (a *App) adminSession(r *http.Request) (bool, error) {
-	c, err := r.Cookie(sessionCookie)
+	c, err := r.Cookie(a.adminCookieName(r, sessionCookie))
 	if err != nil {
 		return false, nil
 	}
@@ -54,7 +64,7 @@ func (a *App) renderAdmin(w http.ResponseWriter, status int, d adminData) {
 }
 func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
-	if !a.secureRequest(r) {
+	if !a.allowInsecureAdmin && !a.secureRequest(r) {
 		http.Error(w, "Admin access requires HTTPS. Configure TLS or a trusted HTTPS reverse proxy.", http.StatusUpgradeRequired)
 		return
 	}
@@ -70,10 +80,10 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	csrf, err := r.Cookie(csrfCookie)
+	csrf, err := r.Cookie(a.adminCookieName(r, csrfCookie))
 	if err != nil || len(csrf.Value) != 64 {
 		csrf = &http.Cookie{Value: randomSecret()}
-		adminCookie(w, csrfCookie, csrf.Value, 3600*12)
+		a.adminCookie(w, r, csrfCookie, csrf.Value, 3600*12)
 	}
 	d := adminData{Title: title, CSRF: csrf.Value}
 	if r.Method == "POST" {
@@ -127,12 +137,12 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/admin/settings", 303)
 			return
 		}
-		c, _ := r.Cookie(sessionCookie)
+		c, _ := r.Cookie(a.adminCookieName(r, sessionCookie))
 		if _, err = a.store.db.ExecContext(r.Context(), `DELETE FROM sessions WHERE hash=?`, secretHash(c.Value)); err != nil {
 			a.internal(w, r, err)
 			return
 		}
-		adminCookie(w, sessionCookie, "", -1)
+		a.adminCookie(w, r, sessionCookie, "", -1)
 		http.Redirect(w, r, "/admin/login", 303)
 		return
 	}
@@ -221,7 +231,7 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 					err = tx.Commit()
 				}
 				if err == nil {
-					adminCookie(w, sessionCookie, "", -1)
+					a.adminCookie(w, r, sessionCookie, "", -1)
 					http.Redirect(w, r, "/admin/login", 303)
 					return
 				}
@@ -390,7 +400,7 @@ func (a *App) login(w http.ResponseWriter, r *http.Request, d adminData) {
 		a.internal(w, r, err)
 		return
 	}
-	adminCookie(w, sessionCookie, token, 12*3600)
-	adminCookie(w, csrfCookie, randomSecret(), 12*3600)
+	a.adminCookie(w, r, sessionCookie, token, 12*3600)
+	a.adminCookie(w, r, csrfCookie, randomSecret(), 12*3600)
 	http.Redirect(w, r, "/admin/settings", 303)
 }

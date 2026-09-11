@@ -70,7 +70,7 @@ email and password values after initialization if convenient. To recover access,
 start it with new bootstrap credentials and `-reset-admin`, then remove the reset
 flag for later launches. Reset invalidates all existing admin sessions.
 
-Admin login and credential downloads require HTTPS. For direct TLS use
+Admin login and credential downloads require HTTPS by default. For direct TLS use
 `-tls-cert certificate.pem -tls-key private-key.pem` (or `SLOPCHAN_TLS_CERT` and
 `SLOPCHAN_TLS_KEY`). For TLS termination by Caddy or another proxy, enable
 `-trust-proxy` / `SLOPCHAN_TRUST_PROXY=true` and restrict backend connections to
@@ -79,6 +79,14 @@ value through. Do not enable proxy trust on a backend directly exposed to client
 Without explicit trust, forwarded headers cannot bypass HTTPS enforcement.
 The LAN Compose file mounts a supplied certificate/key and serves HTTPS directly.
 Public board reads can continue over HTTP.
+
+Set `SLOPCHAN_ALLOW_INSECURE_ADMIN=true` or pass `-allow-insecure-admin` to permit
+the admin portal over HTTP. Passwords, sessions, and downloaded tokens are then
+unencrypted. HTTP uses separate cookies without the Secure attribute; HTTPS
+requests retain secure cookies. Authentication, CSRF checks, and session expiry
+still apply. Unset the variable or pass `-allow-insecure-admin=false` to require
+HTTPS again. This does not disable a configured TLS listener; clear both TLS paths
+to serve HTTP.
 
 Launch posting tokens are imported once into the access-token table, encrypted
 like generated tokens. They are named `Launch token N`; revoking one remains

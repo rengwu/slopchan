@@ -38,21 +38,28 @@ func portal(t *testing.T) (*App, *adminBrowser) {
 }
 
 type adminBrowser struct {
-	handler http.Handler
-	cookies map[string]*http.Cookie
+	handler  http.Handler
+	cookies  map[string]*http.Cookie
+	insecure bool
 }
 
 func (b *adminBrowser) req(method, path string, values url.Values) *httptest.ResponseRecorder {
 	if values == nil {
 		values = url.Values{}
 	}
-	if c := b.cookies[csrfCookie]; c != nil && !values.Has("csrf") {
+	scheme, csrfName := "https", csrfCookie
+	if b.insecure {
+		scheme, csrfName = "http", "slopchan_csrf"
+	}
+	if c := b.cookies[csrfName]; c != nil && !values.Has("csrf") {
 		values.Set("csrf", c.Value)
 	}
-	r := httptest.NewRequest(method, "https://board.example"+path, strings.NewReader(values.Encode()))
+	r := httptest.NewRequest(method, scheme+"://board.example"+path, strings.NewReader(values.Encode()))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	for _, c := range b.cookies {
-		r.AddCookie(c)
+		if !b.insecure || !c.Secure {
+			r.AddCookie(c)
+		}
 	}
 	w := httptest.NewRecorder()
 	b.handler.ServeHTTP(w, r)
@@ -152,6 +159,85 @@ func TestAdminSecurityAndCredentialChanges(t *testing.T) {
 		t.Fatal(err)
 	}
 	expectCode(t, b.req("GET", "/admin/settings", nil), 303)
+}
+
+func TestAdminInsecureHTTP(t *testing.T) {
+	a, b := portal(t)
+	b.insecure = true
+	expectCode(t, b.req("GET", "/admin", nil), http.StatusUpgradeRequired)
+	a.allowInsecureAdmin = true
+	expectCode(t, b.req("GET", "/admin/settings", nil), 303)
+	b.login(t)
+	for _, name := range []string{"slopchan_session", "slopchan_csrf"} {
+		c := b.cookies[name]
+		if c == nil || c.Secure || !c.HttpOnly || c.SameSite != http.SameSiteStrictMode || c.Path != "/admin" {
+			t.Fatalf("invalid HTTP cookie: %+v", c)
+		}
+	}
+	if b.cookies[sessionCookie] != nil || b.cookies[csrfCookie] != nil {
+		t.Fatal("HTTP response used secure cookie names")
+	}
+	for _, path := range []string{"/admin/settings", "/admin/tokens", "/admin/account", "/admin/onboarding"} {
+		expectCode(t, b.req("GET", path, nil), 200)
+	}
+	expectCode(t, b.req("POST", "/admin/settings", url.Values{"csrf": {"bad"}}), 403)
+	r := httptest.NewRequest("POST", "http://board.example/admin/settings", nil)
+	r.Header.Set("Origin", "http://evil.example")
+	w := httptest.NewRecorder()
+	a.handler().ServeHTTP(w, r)
+	expectCode(t, w, 403)
+	expectCode(t, b.req("POST", "/admin/settings", url.Values{"public_url": {"http://board.example"}, "post_limit": {"50"}}), 303)
+	// HTTPS ignores unprefixed cookies, even when HTTP access is enabled.
+	b.insecure = false
+	expectCode(t, b.req("GET", "/admin/settings", nil), 303)
+	b.insecure = true
+	a.allowInsecureAdmin = false
+	expectCode(t, b.req("GET", "/admin/settings", nil), http.StatusUpgradeRequired)
+	a.allowInsecureAdmin = true
+	oldSession := *b.cookies["slopchan_session"]
+	w = b.req("POST", "/admin/logout", nil)
+	expectCode(t, w, 303)
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "slopchan_session" && (c.MaxAge >= 0 || c.Secure) {
+			t.Fatalf("invalid HTTP logout cookie: %+v", c)
+		}
+	}
+	if b.cookies["slopchan_session"] != nil {
+		t.Fatal("logout kept HTTP session cookie")
+	}
+	b.cookies["slopchan_session"] = &oldSession
+	expectCode(t, b.req("GET", "/admin/settings", nil), 303)
+	delete(b.cookies, "slopchan_session")
+	b.login(t)
+	expectCode(t, b.req("POST", "/admin/account", url.Values{"email": {"new@example.com"}, "current_password": {"long-test-password"}, "password": {"new-long-password"}, "password_confirm": {"new-long-password"}}), 303)
+	if b.cookies["slopchan_session"] != nil {
+		t.Fatal("credential change kept HTTP session cookie")
+	}
+}
+
+func TestAdminInsecureOptOutPreservesHTTPSCookies(t *testing.T) {
+	for _, proxy := range []bool{false, true} {
+		t.Run(fmt.Sprintf("proxy=%t", proxy), func(t *testing.T) {
+			a, b := portal(t)
+			a.allowInsecureAdmin = true
+			if proxy {
+				a.trustProxy = true
+				b.handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					r.TLS = nil
+					r.Header.Set("X-Forwarded-Proto", "https")
+					a.handler().ServeHTTP(w, r)
+				})
+			}
+			b.login(t)
+			for _, name := range []string{sessionCookie, csrfCookie} {
+				c := b.cookies[name]
+				if c == nil || !c.Secure || !c.HttpOnly || c.SameSite != http.SameSiteStrictMode || c.Path != "/admin" {
+					t.Fatalf("unsafe HTTPS cookie: %+v", c)
+				}
+			}
+			expectCode(t, b.req("GET", "/admin/settings", nil), 200)
+		})
+	}
 }
 
 func TestTokenLifecycleAndOnboarding(t *testing.T) {

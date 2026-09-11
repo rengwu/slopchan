@@ -3,7 +3,7 @@
 GitHub Releases and GHCR are the canonical native and container downloads. The
 [Homebrew tap](https://github.com/rengwu/homebrew-tap) is maintained separately.
 Its [formula](https://github.com/rengwu/homebrew-tap/blob/main/Formula/slopchan.rb)
-packages 0.3.0 with bottles. Updating the tap, setup guide, and bottles is a
+packages 0.3.1 with bottles. Updating the tap, setup guide, and bottles is a
 separate release step, not handled by this repository's workflow.
 
 ## Prepare a release
@@ -64,6 +64,7 @@ python3 scripts/release.py dev
 go build -o bin/slopchan .
 python3 scripts/smoke-native.py bin/slopchan
 python3 scripts/smoke-admin.py bin/slopchan
+python3 scripts/smoke-admin.py bin/slopchan --http
 docker build -t slopchan:test .
 bash deploy/smoke-container.sh slopchan:test
 ```

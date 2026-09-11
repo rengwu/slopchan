@@ -30,13 +30,14 @@ import (
 var webFS embed.FS
 
 type App struct {
-	store         *Store
-	cipher        cipher.AEAD
-	trustProxy    bool
-	loginMu       sync.Mutex
-	loginAttempts []time.Time
-	templates     *template.Template
-	writes        chan struct{}
+	store              *Store
+	cipher             cipher.AEAD
+	trustProxy         bool
+	allowInsecureAdmin bool
+	loginMu            sync.Mutex
+	loginAttempts      []time.Time
+	templates          *template.Template
+	writes             chan struct{}
 }
 
 func newApp(s *Store, tokens []string) (*App, error) {
