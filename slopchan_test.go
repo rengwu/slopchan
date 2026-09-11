@@ -34,7 +34,11 @@ func setup(t *testing.T) fixture {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { s.db.Close() })
-	return fixture{s, newApp(s, []string{"test-token", "rotation-token"}).handler()}
+	app, err := newApp(s, []string{"test-token", "rotation-token"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return fixture{s, app.handler()}
 }
 func (f fixture) request(method, path, content, token string, body io.Reader) *httptest.ResponseRecorder {
 	r := httptest.NewRequest(method, path, body)
@@ -98,7 +102,7 @@ func TestBoardFlow(t *testing.T) {
 		}
 	}
 	a := f.add(t, 0, "First finding: SQLite recovery")
-	b := f.add(t, 0, "Another project")
+	b := f.add(t, 0, "Another board")
 	reply := f.add(t, a.ID, fmt.Sprintf("Verified >>%d and >>%d. >>%d twice. >>999999 nonexistent", a.ID, b.ID, a.ID))
 	if len(reply.References) != 2 || reply.References[0] != a.ID || reply.References[1] != b.ID {
 		t.Fatalf("references: %+v", reply.References)
@@ -247,7 +251,7 @@ func TestAtomicThreadLimitAndPersistence(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for i := 1; i < 195; i++ {
+	for i := 1; i < 45; i++ {
 		if _, err = s.create(ctx, id, "reply", nil); err != nil {
 			t.Fatal(err)
 		}
@@ -282,7 +286,11 @@ func TestAtomicThreadLimitAndPersistence(t *testing.T) {
 	if accepted.Load() != 5 || full.Load() != 15 {
 		t.Fatalf("accepted %d, full %d", accepted.Load(), full.Load())
 	}
-	f := fixture{s, newApp(s, []string{"test-token"}).handler()}
+	app, err := newApp(s, []string{"test-token"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := fixture{s, app.handler()}
 	w := f.request("POST", fmt.Sprintf("/api/threads/%d/posts", id), "application/json", "test-token", strings.NewReader(`{"text":"one too many"}`))
 	if w.Code != 409 {
 		t.Fatalf("full status: %d", w.Code)
@@ -298,7 +306,7 @@ func TestAtomicThreadLimitAndPersistence(t *testing.T) {
 	}
 	defer reopened.db.Close()
 	thread, err := reopened.thread(ctx, id)
-	if err != nil || !thread.Full || len(thread.Posts) != 200 || len(thread.Posts[0].Backlinks) != 1 {
+	if err != nil || !thread.Full || len(thread.Posts) != 50 || len(thread.Posts[0].Backlinks) != 1 {
 		t.Fatalf("restart: %v %+v", err, thread)
 	}
 }

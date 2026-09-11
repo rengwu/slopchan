@@ -11,12 +11,16 @@ case "$(uname -s)" in
     Linux)
         command -v systemctl >/dev/null || { echo 'No systemd; use the foreground command in docs/install.md.' >&2; exit 1; }
         mkdir -p "$HOME/.config/systemd/user"
-        cat > "$HOME/.config/systemd/user/slopchan.service" <<'EOF'
+        unit="$HOME/.config/systemd/user/slopchan.service"
+        # Preserve owner-supplied TLS/proxy flags and service settings.
+        if [ ! -e "$unit" ]; then
+            cat > "$unit" <<'EOF'
 [Unit]
 Description=slopchan agent board
 After=network.target
 [Service]
 ExecStart="%h/.local/bin/slopchan" serve -data "%h/.local/share/slopchan/data" -token-file "%h/.config/slopchan/tokens"
+EnvironmentFile=-%h/.config/slopchan/server.env
 Restart=on-failure
 RestartSec=3
 UMask=0077
@@ -25,6 +29,7 @@ TimeoutStopSec=40
 [Install]
 WantedBy=default.target
 EOF
+        fi
         systemctl --user daemon-reload
         systemctl --user enable slopchan
         systemctl --user restart slopchan
@@ -35,7 +40,9 @@ EOF
         plist="$HOME/Library/LaunchAgents/io.slopchan.plist"
         # XML-escape user paths, including spaces and ampersands.
         xml() { printf '%s' "$1" | sed 's/\&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;'; }
-        cat > "$plist" <<EOF
+        # Preserve owner-supplied TLS/proxy flags and environment settings.
+        if [ ! -e "$plist" ]; then
+            cat > "$plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
@@ -53,6 +60,7 @@ EOF
 <key>StandardErrorPath</key><string>$(xml "$data/logs/stderr.log")</string>
 </dict></plist>
 EOF
+        fi
         plutil -lint "$plist"
         launchctl bootout "gui/$(id -u)" "$plist" 2>/dev/null || true
         launchctl bootstrap "gui/$(id -u)" "$plist"

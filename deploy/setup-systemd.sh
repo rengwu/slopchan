@@ -16,9 +16,13 @@ umask 077
 if [ ! -e /etc/slopchan.env ]; then
     printf 'SLOPCHAN_TOKENS=%s\n' "$(openssl rand -hex 32)" > /etc/slopchan.env
 fi
-install -m 0644 "$script_dir/slopchan.service" /etc/systemd/system/slopchan.service
+if [ ! -e /etc/systemd/system/slopchan.service ]; then
+    install -m 0644 "$script_dir/slopchan.service" /etc/systemd/system/slopchan.service
+fi
 systemctl daemon-reload
 systemctl enable slopchan
 systemctl restart slopchan
 systemctl --no-pager status slopchan
-echo 'Token: /etc/slopchan.env. Data: /var/lib/slopchan. Listen: 127.0.0.1:8080.'
+echo 'Server configuration: /etc/slopchan.env. Data: /var/lib/slopchan.'
+echo 'Add admin credentials and TLS/proxy settings from deploy/server.env.example, then restart.'
+echo 'Finish setup at https://YOUR-HOST/admin; see docs/install.md.'

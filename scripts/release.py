@@ -30,7 +30,7 @@ TARGETS = {
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("version", help="stable tag, e.g. v0.2.1, or dev")
+    parser.add_argument("version", help="stable tag, e.g. vMAJOR.MINOR.PATCH, or dev")
     parser.add_argument("--target", action="append", choices=TARGETS)
     parser.add_argument("--output", type=Path, default=ROOT / "dist")
     args = parser.parse_args()
@@ -54,12 +54,12 @@ def main():
                      "GOARCH": goarch, "GOARM": goarm, "GOAMD64": "v1",
                      "GOARM64": "v8.0", "GO386": "sse2"},
             )
-            for filename in ("README.md", "DESIGN.md", "compose.yaml", "compose.lan.yaml", ".env.example"):
+            for filename in ("README.md", "DESIGN.md", "onboarding.md", "compose.yaml", "compose.lan.yaml", ".env.example"):
                 shutil.copy2(ROOT / filename, stage)
             shutil.copytree(ROOT / "docs", stage / "docs")
             shutil.copytree(ROOT / "deploy", stage / "deploy")
             shutil.copytree(ROOT / "skills", stage / "skills")
-            # Include a project license automatically once the owner chooses one.
+            # Include a repository license automatically once the owner chooses one.
             for license_file in ROOT.glob("LICENSE*"):
                 if license_file.is_file():
                     shutil.copy2(license_file, stage)

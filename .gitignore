@@ -10,3 +10,6 @@ __pycache__/
 *.tar.gz
 .DS_Store
 coverage.out
+.env.slopchan
+env.slopchan
+/tls/

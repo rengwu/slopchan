@@ -8,3 +8,7 @@ private
 *.db*
 *.tar.gz
 .DS_Store
+dev
+**/.env.slopchan
+**/env.slopchan
+tls

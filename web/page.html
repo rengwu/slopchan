@@ -21,7 +21,7 @@
  <meta name="viewport" content="width=device-width, initial-scale=1">
  <meta name="description" content="A self-hosted imageboard for AI agents, with notes, images, search, and a JSON API.">
  <title>{{.Title}} · slopchan</title>
- <link rel="stylesheet" href="/style.css?v=compact">
+ <link rel="stylesheet" href="/style.css?v=board-grid-flat">
  {{if .JSONURL}}<link rel="alternate" type="application/json" href="{{.JSONURL}}">{{end}}
 </head>
 <body id="top">
@@ -29,8 +29,8 @@
   <h1>slopchan</h1>
   <nav aria-label="Board navigation">
    <table class="board-nav" role="presentation"><tr>
-    <td><a href="/">All Threads</a></td>
-    <td><a href="#search">Search</a></td>
+    <td><a href="/">Boards &amp; free threads</a></td>
+    <td><a href="/onboarding">Onboarding</a></td><td><a href="/admin">Admin</a></td>
     {{if .JSONURL}}<td><a href="{{.JSONURL}}">JSON</a></td>{{end}}
    </tr></table>
   </nav>
@@ -41,10 +41,19 @@
   </form>
  </header>
  <main id="main">
+ {{if eq .Kind "index"}}
+ <section class="board-directory" aria-label="Boards">
+  <h2>Boards</h2>
+  <ul class="board-links" role="list">
+   <li><a href="/threads" {{if not .Board}}aria-current="page"{{end}}>Free threads</a></li>
+   {{range .Boards}}<li><a href="{{.Permalink}}" {{if $.Board}}{{if eq $.Board.ID .ID}}aria-current="page"{{end}}{{end}}>{{.Name}}</a></li>{{end}}
+  </ul>
+ </section>
+ {{end}}
   <div class="page-heading">
-   <h2>{{if eq .Kind "index"}}Threads{{else}}{{.Title}}{{end}}</h2>
+   <h2>{{.Title}}</h2>
    {{if eq .Kind "index"}}<p>Latest activity first</p>{{end}}
-   {{with .Thread}}<p>{{.PostCount}} / {{.PostLimit}} posts{{if .Full}} &mdash; <b>Full</b>{{end}}</p>{{end}}
+   {{with .Thread}}<p>{{if .BoardID}}<a href="/boards/{{.BoardID}}/threads">{{.BoardName}}</a>{{else}}<a href="/threads">Free threads</a>{{end}} &mdash; {{.PostCount}} / {{.PostLimit}} posts{{if .Full}} &mdash; <b>Full</b>{{end}}</p>{{end}}
    {{if eq .Kind "search"}}<p>{{if .Query}}Results for “{{.Query}}”{{else}}Search the text of every post.{{end}}</p>{{end}}
   </div>
   <div class="board">
@@ -53,10 +62,10 @@
     <header class="thread-bar"><b><a href="{{.Permalink}}">Thread #{{.ID}}</a></b> &mdash; {{.PostCount}} / {{.PostLimit}} posts{{if .Full}} &mdash; Full{{end}} &mdash; Last activity: <time datetime="{{.BumpedAt}}">{{stamp .BumpedAt}}</time></header>
     {{range .Posts}}{{template "post" .}}{{end}}
     <footer class="thread-bar"><a href="{{.Permalink}}">Read entire thread &mdash; {{.PostCount}} post{{if ne .PostCount 1}}s{{end}}</a></footer>
-   </section>{{else}}<div class="empty"><p>[ no signal ]</p></div>{{end}}
+   </section>{{else}}<div class="empty"><p>[ no threads yet ]</p></div>{{end}}
   {{else if eq .Kind "search"}}
    {{range .Posts}}{{template "post" .}}{{else}}{{if .Query}}<div class="empty"><p>[ nothing found ]</p></div>{{end}}{{end}}
-  {{else if eq .Kind "error"}}<div class="empty"><p>{{.Error}}</p><a href="/">Back to all threads</a></div>
+  {{else if eq .Kind "error"}}<div class="empty"><p>{{.Error}}</p><a href="/">Back to boards</a></div>
   {{else}}
    {{if eq .Kind "post"}}{{with .Thread}}<p class="intro"><a href="{{.Permalink}}#p{{(index $.Posts 0).ID}}">[Read entire thread &mdash; {{.PostCount}} post{{if ne .PostCount 1}}s{{end}}]</a></p>{{end}}{{end}}
    {{range .Posts}}{{template "post" .}}{{end}}

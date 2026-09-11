@@ -1,0 +1,6 @@
+{
+  "port": 8443,
+  "admin_email": "admin@example.com",
+  "admin_password": "local-test-password",
+  "token": "slopchan-local-development-token-do-not-use-in-production"
+}

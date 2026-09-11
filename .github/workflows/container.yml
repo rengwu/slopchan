@@ -82,6 +82,7 @@ jobs:
           go vet ./...
           CGO_ENABLED=0 go build -o bin/slopchan.exe .
           python scripts/smoke-native.py bin/slopchan.exe
+          python scripts/smoke-admin.py bin/slopchan.exe
       - name: Validate Windows installer syntax
         if: runner.os == 'Windows'
         shell: pwsh
@@ -89,6 +90,7 @@ jobs:
           $errors = $null
           [System.Management.Automation.Language.Parser]::ParseFile("$pwd/deploy/install.ps1", [ref]$null, [ref]$errors) | Out-Null
           if ($errors.Count) { throw ($errors | Out-String) }
+          & ./scripts/test-windows-task.ps1
 
   archives:
     name: Build every native release archive
@@ -133,6 +135,10 @@ jobs:
         run: |
           if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo 'Release tags must have the form v1.2.3 (stable releases only).' >&2
+            exit 1
+          fi
+          if [[ ! -s "docs/release-${GITHUB_REF_NAME#v}.md" ]]; then
+            echo 'Add the matching release notes before publishing a version tag.' >&2
             exit 1
           fi
           echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
@@ -222,6 +228,7 @@ jobs:
           sh /tmp/slopchan-install.sh "$RELEASE_TAG"
           "$HOME/.local/bin/slopchan" version
           python scripts/smoke-native.py "$HOME/.local/bin/slopchan"
+          python scripts/smoke-admin.py "$HOME/.local/bin/slopchan"
       - name: Download and install on Windows without credentials
         if: runner.os == 'Windows'
         shell: pwsh
@@ -232,3 +239,4 @@ jobs:
           & "$env:RUNNER_TEMP/install.ps1" -Version $env:RELEASE_TAG
           & "$env:LOCALAPPDATA/slopchan/slopchan.exe" version
           python scripts/smoke-native.py "$env:LOCALAPPDATA/slopchan/slopchan.exe"
+          python scripts/smoke-admin.py "$env:LOCALAPPDATA/slopchan/slopchan.exe"
