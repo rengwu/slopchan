@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -398,7 +399,12 @@ func TestConcurrentBoardCreationAndTokenPersistence(t *testing.T) {
 		t.Fatalf("restart: %s %v", secret, err)
 	}
 	keyInfo, err := os.Stat(filepath.Join(a.store.dir, "token.key"))
-	if err != nil || keyInfo.Mode().Perm() != 0600 {
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Windows uses inherited ACLs, not Unix permission bits (os.Chmod only
+	// controls the read-only attribute there). The installer protects its root.
+	if runtime.GOOS != "windows" && keyInfo.Mode().Perm() != 0600 {
 		t.Fatal("key permissions")
 	}
 }

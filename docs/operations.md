@@ -92,7 +92,9 @@ You can rename it to `.env.slopchan`. Ignore both names in any repository that
 stores credentials.
 
 Downloadable token values use AES-256-GCM with random nonces. The separate key is
-`DATA_DIR/token.key` (mode 0600); token authentication uses SHA-256 digests.
+`DATA_DIR/token.key` (mode 0600 on Unix); token authentication uses SHA-256 digests.
+On Windows it inherits the data directory's ACLs. The Windows installer restricts
+its root to the installing user and SYSTEM; use equally private ACLs for manual paths.
 **Back up this key with the database and images.** Restoring a database without its
 matching key prevents credential downloads, and a missing key with existing
 encrypted tokens causes startup to fail rather than silently replacing it.
