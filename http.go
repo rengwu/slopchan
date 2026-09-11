@@ -2,8 +2,8 @@ package main
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"crypto/subtle"
+	"context"
+	"crypto/cipher"
 	"database/sql"
 	"embed"
 	"encoding/json"
@@ -21,6 +21,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 	"unicode/utf8"
 )
 
@@ -28,17 +30,27 @@ import (
 var webFS embed.FS
 
 type App struct {
-	store     *Store
-	tokens    [][32]byte
-	templates *template.Template
-	writes    chan struct{}
+	store         *Store
+	cipher        cipher.AEAD
+	trustProxy    bool
+	loginMu       sync.Mutex
+	loginAttempts []time.Time
+	templates     *template.Template
+	writes        chan struct{}
 }
 
-func newApp(s *Store, tokens []string) *App {
+func newApp(s *Store, tokens []string) (*App, error) {
 	a := &App{store: s, writes: make(chan struct{}, 1)}
-	for _, t := range tokens {
+	var err error
+	a.cipher, err = tokenCipher(s.dir, s.db)
+	if err != nil {
+		return nil, err
+	}
+	for i, t := range tokens {
 		if t = strings.TrimSpace(t); t != "" {
-			a.tokens = append(a.tokens, sha256.Sum256([]byte(t)))
+			if err = a.saveToken(context.Background(), fmt.Sprintf("Launch token %d", i+1), t); err != nil {
+				return nil, err
+			}
 		}
 	}
 	a.templates = template.Must(template.New("page.html").Funcs(template.FuncMap{"body": renderBody, "stamp": func(s string) string {
@@ -46,14 +58,23 @@ func newApp(s *Store, tokens []string) *App {
 			return s[:10] + " " + s[11:19] + " UTC"
 		}
 		return s
-	}, "plus": func(a, b int) int { return a + b }}).ParseFS(webFS, "web/page.html"))
-	return a
+	}, "plus": func(a, b int) int { return a + b }}).ParseFS(webFS, "web/page.html", "web/admin.html"))
+	return a, nil
 }
 
 func (a *App) handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", a.index)
 	mux.HandleFunc("GET /threads/{id}", a.getThread)
+	mux.HandleFunc("GET /threads", a.index)
+	mux.HandleFunc("GET /boards/{board}/threads", a.index)
+	mux.HandleFunc("GET /api/boards", a.getBoards)
+	mux.HandleFunc("POST /api/boards", a.authorize(a.createBoard))
+	mux.HandleFunc("GET /api/boards/{board}/threads", a.index)
+	mux.HandleFunc("POST /api/boards/{board}/threads", a.authorize(a.create))
+	mux.HandleFunc("GET /onboarding", a.onboarding)
+	mux.Handle("/admin", http.NewCrossOriginProtection().Handler(http.HandlerFunc(a.admin)))
+	mux.Handle("/admin/", http.NewCrossOriginProtection().Handler(http.HandlerFunc(a.admin)))
 	mux.HandleFunc("GET /posts/{id}", a.getPost)
 	mux.HandleFunc("GET /search", a.search)
 	mux.HandleFunc("GET /api/threads", a.index)
@@ -89,12 +110,12 @@ func (a *App) authorize(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		auth := r.Header.Get("Authorization")
 		token, ok := strings.CutPrefix(auth, "Bearer ")
-		hash := sha256.Sum256([]byte(token))
-		valid := 0
-		for _, expected := range a.tokens {
-			valid |= subtle.ConstantTimeCompare(hash[:], expected[:])
+		valid, err := a.validToken(r.Context(), token)
+		if err != nil {
+			a.internal(w, r, err)
+			return
 		}
-		if !ok || valid != 1 {
+		if !ok || !valid {
 			w.Header().Set("WWW-Authenticate", `Bearer realm="slopchan"`)
 			a.problem(w, r, 401, "unauthorized", "A valid bearer token is required.")
 			return
@@ -105,6 +126,8 @@ func (a *App) authorize(next http.HandlerFunc) http.HandlerFunc {
 
 type pageData struct {
 	Title, Kind, Query, Error, JSONURL, NextURL, PrevURL string
+	Boards                                               []Board
+	Board                                                *Board
 	Page                                                 int
 	Threads                                              []Thread
 	Thread                                               *Thread
@@ -176,25 +199,54 @@ func (a *App) index(w http.ResponseWriter, r *http.Request) {
 		a.problem(w, r, 400, "invalid_page", err.Error())
 		return
 	}
-	ts, more, err := a.store.list(r.Context(), p)
+	s, done, err := a.store.snapshot(r.Context())
+	if err != nil {
+		a.internal(w, r, err)
+		return
+	}
+	defer done()
+	var boardID *int64
+	var board *Board
+	base, apiBase, title := "/threads", "/api/threads", "Free threads"
+	if raw := r.PathValue("board"); raw != "" {
+		id, e := strconv.ParseInt(raw, 10, 64)
+		if e != nil || id < 1 {
+			a.internal(w, r, errNotFound)
+			return
+		}
+		v, e := s.board(r.Context(), id)
+		if e != nil {
+			a.internal(w, r, e)
+			return
+		}
+		board = &v
+		boardID = &id
+		base, apiBase, title = v.Permalink, v.APIURL, v.Name
+	}
+	ts, more, err := s.listBoard(r.Context(), p, boardID)
 	if err != nil {
 		a.internal(w, r, err)
 		return
 	}
 	var next any
 	if more {
-		next = pageURL("/api/threads", "", p+1)
+		next = pageURL(apiBase, "", p+1)
 	}
 	if wantsJSON(r) {
-		sendJSON(w, 200, map[string]any{"threads": ts, "page": p, "page_size": pageSize, "next": next})
+		sendJSON(w, 200, map[string]any{"threads": ts, "board": board, "page": p, "page_size": pageSize, "next": next})
 		return
 	}
-	d := pageData{Title: "Threads", Kind: "index", Threads: ts, Page: p, JSONURL: pageURL("/api/threads", "", p)}
+	boards, err := s.boards(r.Context())
+	if err != nil {
+		a.internal(w, r, err)
+		return
+	}
+	d := pageData{Title: title, Kind: "index", Threads: ts, Page: p, JSONURL: pageURL(apiBase, "", p), Boards: boards, Board: board}
 	if more {
-		d.NextURL = pageURL("/", "", p+1)
+		d.NextURL = pageURL(base, "", p+1)
 	}
 	if p > 1 {
-		d.PrevURL = pageURL("/", "", p-1)
+		d.PrevURL = pageURL(base, "", p-1)
 	}
 	a.page(w, 200, d)
 }
@@ -324,13 +376,25 @@ func (a *App) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	id, err := a.store.create(r.Context(), threadID, body, img)
+	var boardID *int64
+	if raw := r.PathValue("board"); raw != "" {
+		value, e := strconv.ParseInt(raw, 10, 64)
+		if e != nil || value < 1 {
+			if img != nil {
+				os.Remove(filepath.Join(a.store.dir, "images", img.Name))
+			}
+			a.internal(w, r, errNotFound)
+			return
+		}
+		boardID = &value
+	}
+	id, err := a.store.createInBoard(r.Context(), threadID, boardID, body, img)
 	if err != nil {
 		if img != nil {
 			os.Remove(filepath.Join(a.store.dir, "images", img.Name))
 		}
 		if errors.Is(err, errFull) {
-			a.problem(w, r, 409, "thread_full", "This thread has reached its 200-post limit.")
+			a.problem(w, r, 409, "thread_full", "This thread is full. Open a continuation in the same board (or free threads), referencing this thread.")
 			return
 		}
 		a.internal(w, r, err)

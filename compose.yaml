@@ -3,7 +3,10 @@ services:
     image: ${SLOPCHAN_IMAGE:-ghcr.io/rengwu/slopchan:0.2.1}
     restart: unless-stopped
     environment:
-      SLOPCHAN_TOKENS: ${SLOPCHAN_TOKENS:?Set SLOPCHAN_TOKENS in .env}
+      SLOPCHAN_TOKENS: ${SLOPCHAN_TOKENS:-}
+      SLOPCHAN_ADMIN_EMAIL: ${SLOPCHAN_ADMIN_EMAIL:-}
+      SLOPCHAN_ADMIN_PASSWORD: ${SLOPCHAN_ADMIN_PASSWORD:-}
+      SLOPCHAN_TRUST_PROXY: "true"
     volumes:
       - slopchan_data:/data
     read_only: true

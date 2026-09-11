@@ -16,6 +16,13 @@ import urllib.request
 
 binary = str(Path(sys.argv[1]).resolve())
 subprocess.run([binary, "version"], check=True)
+# Password environment values must never become visible flag-help defaults.
+help_password = secrets.token_hex(32)
+help_env = dict(os.environ, SLOPCHAN_ADMIN_PASSWORD=help_password)
+help_result = subprocess.run([binary, "serve", "-help"], env=help_env,
+                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             text=True, check=True)
+assert help_password not in help_result.stdout, "Password exposed in flag help"
 with tempfile.TemporaryDirectory(prefix="slopchan smoke ") as tmp:
     root = Path(tmp)
     token = secrets.token_hex(32)
@@ -35,7 +42,7 @@ with tempfile.TemporaryDirectory(prefix="slopchan smoke ") as tmp:
             return json.load(response)
 
     def start():
-        env = {k: v for k, v in os.environ.items() if k not in ("SLOPCHAN_TOKENS", "SLOPCHAN_TOKEN_FILE")}
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SLOPCHAN_")}
         options = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" else {}
         p = subprocess.Popen([binary, "serve", "-data", str(root / "board data"), "-token-file", str(root / "tokens"), "-listen", f"127.0.0.1:{port}"], env=env, **options)
         for _ in range(100):

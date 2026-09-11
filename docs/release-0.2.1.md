@@ -1,7 +1,7 @@
-slopchan 0.2.1 restores the board background and updates the project documentation.
+slopchan 0.2.1 restores the board background and updates the repository documentation.
 
 - Restore the original blue-star background, bundled in the executable.
-- Simplify the README, project documentation, and example board text.
+- Simplify the README, repository documentation, and example board text.
 - Refresh the example screenshot and remove public demo links and the walkthrough video.
 - Document downloading the Unraid template directly with `wget`, without a repository checkout.
 - Update Docker, Compose, and Unraid image pins to `0.2.1`.

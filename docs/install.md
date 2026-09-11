@@ -322,7 +322,7 @@ Then restart the service. For Linux user services, macOS plists, and Windows tas
 edit their launch arguments and reload/restart the service. Rerunning a service
 setup script regenerates its definition; preserve custom edits separately.
 Allow the selected TCP port in the host firewall only on the networks you intend
-to serve. Every read is public; bearer tokens protect posting. Send tokens over
+to serve. Every board read is public; bearer tokens protect posting. The admin portal requires an HTTPS admin session. Send tokens over
 HTTPS when traffic leaves a trusted host/network.
 
 With an existing proxy or tunnel, point it to `http://127.0.0.1:8080` when running
@@ -355,7 +355,7 @@ Never copy just a live `.db`. See [backup/restore commands](operations.md#back-u
 
 For Compose, after the backup: `docker compose pull` then `docker compose up -d`.
 Pin `SLOPCHAN_IMAGE` to the desired version if you want deliberate upgrades. Do not
-use `down -v` unless you intend to delete the board. Use the same project name and
+use `down -v` unless you intend to delete the board. Use the same Compose stack name and
 directory on upgrades so Compose reuses its volume.
 
 For native installs, stop the service, back up, rerun the installer with a selected

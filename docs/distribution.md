@@ -61,7 +61,7 @@ GitHub release creation failed. Never replace a published version's assets silen
 | 1 | **GitHub Releases + GHCR** | Canonical native and container downloads; already automated here. Make downloads publicly accessible and publish the next tag. Mirror to Docker Hub later if users ask for it; that adds registry credentials and another publication destination. |
 | 1 | **Homebrew personal tap** ([rengwu/homebrew-tap](https://github.com/rengwu/homebrew-tap)) | Created: verified `0.2.1` source formula, automatic private token initialization, persistent storage, `brew services`, and an API/persistence test. Install with `brew install rengwu/tap/slopchan`. Maintain version bumps in the tap; bottles and Homebrew core submission remain future work. [Tap guide](https://docs.brew.sh/How-to-Create-and-Maintain-a-Tap), [formula/service cookbook](https://docs.brew.sh/Formula-Cookbook). |
 | 1 | **Scoop personal bucket**, then `ScoopInstaller/Main` | Fits the portable Windows ZIP; no MSI is necessary. Generate x64/ARM64 URL and SHA-256 entries from each release, expose `slopchan.exe`, and document service setup separately. Keep mutable state under LocalAppData or use Scoop's persist mechanism, outside versioned package directories. [Buckets](https://github.com/ScoopInstaller/Scoop/wiki/Buckets), [Main repository](https://github.com/ScoopInstaller/Main). |
-| 1 | **Unraid Community Applications** | The existing XML is a good starting point. Prepare a public template repository, icon, screenshots, support/project URLs, and confirm storage permissions and the pinned image on Unraid. Follow the current maintainer intake process linked by the [Community Applications project](https://github.com/Squidly271/community.applications). |
+| 1 | **Unraid Community Applications** | The existing XML is a good starting point. Prepare a public template repository, icon, screenshots, support/repository URLs, and confirm storage permissions and the pinned image on Unraid. Follow the current maintainer intake process linked by the [Community Applications repository](https://github.com/Squidly271/community.applications). |
 | 2 | **AUR**: `slopchan` and/or `slopchan-bin` | Offer a source PKGBUILD first, or `-bin` for the official archives. Include systemd integration, a dedicated system user through sysusers, license notices, and persistent state outside the package. Generate checksums and `.SRCINFO`; never use `SKIP` for release checksums. AUR hosts build recipes, not the compiled archive. [Submission guidelines](https://wiki.archlinux.org/title/AUR_submission_guidelines). |
 | 2 | **CasaOS / ZimaOS App Store** | Good match for mini NAS owners. Adapt LAN Compose with the store's metadata, architecture list, icon/screenshots, writable local storage, web portal, and token configuration. Test the actual import/install UI before submitting to the official store. [Store](https://github.com/IceWhaleTech/CasaOS-AppStore), [contributing](https://github.com/IceWhaleTech/CasaOS-AppStore/blob/main/CONTRIBUTING.md). |
 | 2 | **TrueNAS Apps, community train** | Relevant NAS audience. Wrap the image in the catalog's questions, storage/permission, port, and portal schema; validate in a current TrueNAS VM. Plain Compose already gives users a custom-app route. [Contribution guide](https://github.com/truenas/apps/blob/master/CONTRIBUTIONS.md). |
@@ -80,8 +80,8 @@ would each add packaging/lifecycle work; prioritize them only with demonstrated 
 
 ## Before public package submissions
 
-The project code is MIT licensed; see [asset provenance](ASSETS.md) for third-party
-artwork and dependency notices. The release builder includes the project license
+The application code is MIT licensed; see [asset provenance](ASSETS.md) for third-party
+artwork and dependency notices. The release builder includes the repository license
 and dependency license/notice files.
 
 Package recipes should reference stable public assets with matching hashes, never

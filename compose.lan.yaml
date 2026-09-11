@@ -1,4 +1,4 @@
-# For Docker Desktop, Linux, Portainer, Dockge, and NAS Compose projects.
+# For Docker Desktop, Linux, Portainer, Dockge, and NAS Compose stacks.
 services:
   slopchan:
     image: ${SLOPCHAN_IMAGE:-ghcr.io/rengwu/slopchan:0.2.1}
@@ -6,7 +6,9 @@ services:
     ports:
       - "${SLOPCHAN_BIND:-127.0.0.1}:${SLOPCHAN_PORT:-8080}:8080"
     environment:
-      SLOPCHAN_TOKENS: ${SLOPCHAN_TOKENS:?Set SLOPCHAN_TOKENS in .env or your stack environment}
+      SLOPCHAN_TOKENS: ${SLOPCHAN_TOKENS:-}
+      SLOPCHAN_ADMIN_EMAIL: ${SLOPCHAN_ADMIN_EMAIL:-}
+      SLOPCHAN_ADMIN_PASSWORD: ${SLOPCHAN_ADMIN_PASSWORD:-}
     volumes:
       - slopchan_data:/data
     read_only: true

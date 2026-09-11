@@ -15,7 +15,6 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const postLimit = 200
 const pageSize = 20
 const textLimit = 10000
 const previewLimit = 2000
@@ -48,6 +47,8 @@ type Post struct {
 
 type Thread struct {
 	ID            int64  `json:"id"`
+	BoardID       *int64 `json:"board_id"`
+	BoardName     string `json:"board_name,omitempty"`
 	PostCount     int    `json:"post_count"`
 	PostLimit     int    `json:"post_limit"`
 	LastPostID    int64  `json:"last_post_id"`
@@ -108,7 +109,7 @@ func openStore(dir string) (*Store, error) {
 	if err = db.QueryRow(`PRAGMA user_version`).Scan(&version); err != nil {
 		return fail(err)
 	}
-	if version > 1 {
+	if version > 3 {
 		return fail(fmt.Errorf("database schema %d is newer than this application", version))
 	}
 	if version == 0 {
@@ -153,12 +154,30 @@ func openStore(dir string) (*Store, error) {
 			return fail(err)
 		}
 	}
+	if version < 2 {
+		initialPostLimit := 200 // Preserve the capacity of existing v1 databases.
+		if version == 0 {
+			initialPostLimit = defaultPostLimit
+		}
+		if _, err = db.Exec(fmt.Sprintf(schemaV2, initialPostLimit)); err != nil {
+			return fail(err)
+		}
+	}
+	if version < 3 {
+		if err = migrateBoards(db); err != nil {
+			return fail(err)
+		}
+	}
 	return &Store{db: db, dir: abs}, nil
 }
 
 // A dedicated connection and BEGIN IMMEDIATE serialize the count check and insert
 // across both goroutines and other processes (including owner commands).
 func (s *Store) create(ctx context.Context, threadID int64, body string, img *storedImage) (int64, error) {
+	return s.createInBoard(ctx, threadID, nil, body, img)
+}
+
+func (s *Store) createInBoard(ctx context.Context, threadID int64, boardID *int64, body string, img *storedImage) (int64, error) {
 	conn, err := s.db.Conn(ctx)
 	if err != nil {
 		return 0, err
@@ -168,16 +187,29 @@ func (s *Store) create(ctx context.Context, threadID int64, body string, img *st
 		return 0, err
 	}
 	defer conn.ExecContext(context.Background(), `ROLLBACK`)
+	var limit int
+	if err = conn.QueryRowContext(ctx, `SELECT post_limit FROM settings WHERE id=1`).Scan(&limit); err != nil {
+		return 0, err
+	}
+	if boardID != nil {
+		var exists int
+		if err = conn.QueryRowContext(ctx, `SELECT id FROM boards WHERE id=?`, *boardID).Scan(&exists); errors.Is(err, sql.ErrNoRows) {
+			return 0, errNotFound
+		} else if err != nil {
+			return 0, err
+		}
+	}
 	if threadID != 0 {
 		var count int
-		err = conn.QueryRowContext(ctx, `SELECT post_count FROM threads WHERE id=?`, threadID).Scan(&count)
+		var full bool
+		err = conn.QueryRowContext(ctx, `SELECT post_count,full FROM threads WHERE id=?`, threadID).Scan(&count, &full)
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, errNotFound
 		}
 		if err != nil {
 			return 0, err
 		}
-		if count >= postLimit {
+		if full || count >= limit {
 			return 0, errFull
 		}
 	}
@@ -202,9 +234,9 @@ func (s *Store) create(ctx context.Context, threadID int64, body string, img *st
 		if _, err = conn.ExecContext(ctx, `UPDATE posts SET thread_id=? WHERE id=?`, id, id); err != nil {
 			return 0, err
 		}
-		_, err = conn.ExecContext(ctx, `INSERT INTO threads(id,post_count,last_post_id,bumped_at) VALUES(?,1,?,?)`, id, id, now)
+		_, err = conn.ExecContext(ctx, `INSERT INTO threads(id,post_count,last_post_id,bumped_at,board_id,full) VALUES(?,1,?,?,?,?)`, id, id, now, boardID, limit <= 1)
 	} else {
-		_, err = conn.ExecContext(ctx, `UPDATE threads SET post_count=post_count+1,last_post_id=?,bumped_at=? WHERE id=?`, id, now, threadID)
+		_, err = conn.ExecContext(ctx, `UPDATE threads SET post_count=post_count+1,last_post_id=?,bumped_at=?,full=(post_count+1>=?) WHERE id=?`, id, now, limit, threadID)
 	}
 	if err != nil {
 		return 0, err
@@ -302,15 +334,14 @@ func (s *Store) post(ctx context.Context, id int64) (Post, error) {
 
 func (s *Store) threadMeta(ctx context.Context, id int64) (Thread, error) {
 	var t Thread
-	err := s.queryRow(ctx, `SELECT id,post_count,last_post_id,bumped_at FROM threads WHERE id=?`, id).Scan(&t.ID, &t.PostCount, &t.LastPostID, &t.BumpedAt)
+	err := s.queryRow(ctx, `SELECT t.id,t.post_count,t.last_post_id,t.bumped_at,t.board_id,COALESCE(p.name,''),t.full,s.post_limit FROM threads t LEFT JOIN boards p ON p.id=t.board_id CROSS JOIN settings s WHERE t.id=? AND s.id=1`, id).Scan(&t.ID, &t.PostCount, &t.LastPostID, &t.BumpedAt, &t.BoardID, &t.BoardName, &t.Full, &t.PostLimit)
 	if errors.Is(err, sql.ErrNoRows) {
 		return t, errNotFound
 	}
 	if err != nil {
 		return t, err
 	}
-	t.PostLimit = postLimit
-	t.Full = t.PostCount >= postLimit
+	t.Full = t.Full || t.PostCount >= t.PostLimit
 	t.Permalink = fmt.Sprintf("/threads/%d", id)
 	t.APIURL = fmt.Sprintf("/api/threads/%d", id)
 	return t, nil
@@ -335,12 +366,17 @@ func (s *Store) thread(ctx context.Context, id int64) (Thread, error) {
 }
 
 func (s *Store) list(ctx context.Context, page int) ([]Thread, bool, error) {
+	return s.listBoard(ctx, page, nil)
+}
+
+// nil selects free threads; board IDs select one board.
+func (s *Store) listBoard(ctx context.Context, page int, boardID *int64) ([]Thread, bool, error) {
 	s, done, err := s.snapshot(ctx)
 	if err != nil {
 		return nil, false, err
 	}
 	defer done()
-	rows, err := s.readTx.QueryContext(ctx, `SELECT id FROM threads ORDER BY bumped_at DESC,last_post_id DESC LIMIT ? OFFSET ?`, pageSize+1, (page-1)*pageSize)
+	rows, err := s.readTx.QueryContext(ctx, `SELECT id FROM threads WHERE board_id IS ? ORDER BY bumped_at DESC,last_post_id DESC LIMIT ? OFFSET ?`, boardID, pageSize+1, (page-1)*pageSize)
 	if err != nil {
 		return nil, false, err
 	}

@@ -59,7 +59,7 @@ def main():
             shutil.copytree(ROOT / "docs", stage / "docs")
             shutil.copytree(ROOT / "deploy", stage / "deploy")
             shutil.copytree(ROOT / "skills", stage / "skills")
-            # Include a project license automatically once the owner chooses one.
+            # Include a repository license automatically once the owner chooses one.
             for license_file in ROOT.glob("LICENSE*"):
                 if license_file.is_file():
                     shutil.copy2(license_file, stage)

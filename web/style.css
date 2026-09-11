@@ -29,3 +29,50 @@ a:hover { color: #000; background: #ffcc00; }
 .post:target { outline: 2px solid #ffcc33; }
 .tombstone { font-style: italic; }
 .site-footer { margin: 12px 0; }
+
+.board-directory { width: 96%; margin: 16px auto; border: 1px solid #ffcc33; background: #ccccff; box-sizing: border-box; }
+.board-directory h2 { display: block; text-align: left; margin: 0; padding: 5px 8px; border-bottom: 1px solid #ffcc33; background: #666699; font-size: 15px; }
+.board-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); list-style: none; margin: 0; padding: 0; }
+.board-links li { display: flex; min-width: 0; border-right: 1px solid #aaaacc; border-bottom: 1px solid #aaaacc; }
+.board-links a, .board-links a:visited { display: block; flex: 1; min-width: 0; padding: 4px 8px; color: #000099; line-height: 1.35; overflow-wrap: anywhere; }
+.board-links [aria-current="page"] { font-weight: bold; }
+.board-links a:hover { background: #ffcc33; color: #000; }
+.board-links a:focus-visible { outline: 2px solid #000099; outline-offset: -2px; }
+.admin-return { text-align: center; }
+.admin-shell { max-width: 1080px; margin: 20px auto; border: 2px ridge #eee; background: #c0c0c0; color: #111; }
+.login-shell { max-width: 420px; }
+.admin-shell a { color: #000080; }
+.admin-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; background: #000080; padding: 6px; }
+.admin-nav a { color: #fff; padding: 6px 10px; }
+.admin-nav [aria-current="page"] { background: #c0c0c0; color: #000080; font-weight: bold; }
+.admin-nav form { margin-left: auto; }
+.admin-panel { padding: 18px; }
+.admin-panel h2 { display: block; text-align: left; margin: 0 0 18px; font-family: Arial, sans-serif; }
+.admin-tabs { display: flex; gap: 4px; border-bottom: 1px solid #666; margin-bottom: 18px; }
+.admin-tabs a { padding: 8px 14px; border: 2px outset #eee; border-bottom: 0; }
+.admin-tabs [aria-current="page"] { background: #eeeedd; font-weight: bold; }
+.admin-form { max-width: 620px; }
+.admin-form label { display: block; font-weight: bold; margin: 14px 0 5px; }
+.admin-form input:not([type="hidden"]), .admin-form textarea { display: block; box-sizing: border-box; width: 100%; padding: 7px; border: 2px inset #eee; background: #fff; color: #111; font: inherit; }
+.admin-form input[type="number"] { max-width: 150px; }
+.admin-form textarea { font: 13px/1.45 monospace; min-height: 300px; resize: vertical; }
+.admin-shell button, .token-create summary { border: 2px outset #eee; background: #ddd; color: #111; padding: 5px 12px; cursor: pointer; font: inherit; }
+.admin-shell button:active { border-style: inset; }
+.admin-shell :focus-visible { outline: 2px solid #000080; outline-offset: 2px; }
+.field-help { color: #333; line-height: 1.4; margin: 6px 0 20px; }
+.admin-error, .admin-message { background: #ffffe1; border: 1px solid #800000; padding: 10px; color: #800000; }
+.admin-message { border-color: #006000; color: #004000; }
+.token-create { margin: 16px 0; }
+.token-create summary { display: list-item; width: fit-content; margin-left: 16px; }
+.token-create .admin-form { border: 1px solid #888; padding: 0 12px; max-width: 350px; margin-top: 8px; }
+.table-scroll { overflow-x: auto; }
+.token-table { border-collapse: collapse; width: 100%; background: #eeeedd; text-align: left; }
+.token-table caption { text-align: left; font-weight: bold; padding: 8px 0; }
+.token-table th, .token-table td { border: 1px solid #888; padding: 8px; }
+.token-table th { background: #ddd; }
+.token-table td:first-child { overflow-wrap: anywhere; max-width: 220px; }
+.token-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+.token-actions button { white-space: nowrap; font-size: 12px; }
+.credential-note { line-height: 1.5; font-size: 12px; overflow-wrap: anywhere; }
+.onboarding-form { max-width: none; }
+@media (max-width: 600px) { .admin-panel { padding: 12px; } .admin-nav a { padding: 6px; } .admin-nav form { margin: 2px; } .board-nav { width: 96%; } }
