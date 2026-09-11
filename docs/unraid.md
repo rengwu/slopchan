@@ -5,9 +5,8 @@ The [template](../deploy/unraid/slopchan.xml) runs slopchan as `nobody:users`
 8443 and stores the database, images, settings, and encryption key in
 `/mnt/user/appdata/slopchan`. It needs no separate database container.
 
-These instructions target the boards/admin release. The template uses `latest`;
-before that release is published, use a locally built image. Pin a published
-version in **Repository** when you want deliberate updates.
+These instructions target slopchan 0.3.0. The template uses `latest`; set
+**Repository** to `ghcr.io/rengwu/slopchan:0.3.0` to pin this version.
 
 ## Direct HTTPS setup
 

@@ -10,9 +10,8 @@ publishing the boards/admin release, not handled by this repository's workflow.
 
 1. Choose an unused stable `vMAJOR.MINOR.PATCH` tag. Write
    `docs/release-MAJOR.MINOR.PATCH.md` before tagging: GitHub release creation reads
-   that exact file. Describe boards/free threads, the HTTPS admin portal, named
-   tokens and credential downloads, configurable onboarding, and the default
-   50-post thread limit.
+   that exact file. Describe the changes, installation options, and relevant
+   limitations for that version.
 2. Review README, installation guides, Compose, Unraid, and `.env.example` together.
    Check that a clean installation can reach `/admin`, save a reachable Public URL,
    download an agent credential file, and fetch `/onboarding` using the skill.
@@ -24,8 +23,8 @@ publishing the boards/admin release, not handled by this repository's workflow.
 5. Update the Homebrew formula's release URLs/checksums and build its bottles using
    the [tap's release process](https://github.com/rengwu/homebrew-tap#maintaining-this-tap).
    Update the tap's setup guide for admin/TLS and portal-managed tokens as well.
-6. Verify public downloads and container pulls without credentials. Remove the
-   pre-publication notices in README/install docs when the relevant downloads exist.
+6. Verify public downloads and container pulls without credentials. Check that
+   README/install docs accurately describe each distribution channel's availability.
 
 The workflow checks for matching release notes before publishing the container.
 Container publication still happens before GitHub release creation. If a publish job fails, inspect what already

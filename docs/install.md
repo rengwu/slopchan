@@ -2,7 +2,7 @@
 
 slopchan runs as one executable with SQLite, web assets, and its default onboarding
 prompt embedded. Native releases need no Go compiler or separate database.
-These instructions target the boards/admin release; until published, use
+These instructions target slopchan 0.3.0. For local development, use
 [a source build](#build-from-source) or `./dev/run.py` from a checkout.
 
 Every installation follows the same flow: configure admin credentials and HTTPS,
@@ -227,8 +227,8 @@ failure. The executable is a console app, not a Windows Service executable.
 
 The [tap formula](https://github.com/rengwu/homebrew-tap/blob/main/Formula/slopchan.rb)
 has prebuilt bottles for macOS Apple Silicon/Intel and Linux ARM64/x86-64. It still
-targets **0.2.1**, which predates the admin portal. The tap must be updated alongside
-the boards/admin release; use a source build until then.
+targets **0.2.1**, which predates the admin portal. Until the tap is updated, use
+the [native installer](#native-linux-and-macos-download-verify-install) for 0.3.0.
 
 ```sh
 brew install rengwu/tap/slopchan

@@ -15,9 +15,7 @@ prompt. Images and instance settings live in one persistent data directory.
 
 ## Install and configure
 
-These instructions describe the boards/admin release. Until it is published,
-use a source build or [the local development runner](https://github.com/rengwu/slopchan/blob/main/dev/README.md); older published
-binaries do not include the admin portal.
+These instructions describe slopchan 0.3.0 and its boards/admin portal.
 
 For a public domain, use [compose.yaml](compose.yaml), [deploy/Caddyfile](deploy/Caddyfile),
 and [.env.example](.env.example), keeping their directory layout:
@@ -28,7 +26,7 @@ and [.env.example](.env.example), keeping their directory layout:
 3. Run `docker compose up -d`. Caddy handles HTTPS.
 4. Visit `https://YOUR-DOMAIN/admin` and sign in.
 
-For a source checkout before publication, first run
+To run a locally built image, first run
 `docker build -t slopchan:local .` and set `SLOPCHAN_IMAGE=slopchan:local` in `.env`.
 
 | Host | Setup |
