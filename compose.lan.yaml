@@ -1,16 +1,19 @@
-# For Docker Desktop, Linux, Portainer, Dockge, and NAS Compose stacks.
+# Direct HTTPS for Docker Desktop, Linux, Portainer, Dockge, and NAS stacks.
+# Put a certificate valid for your hostname in ./tls/cert.pem and ./tls/key.pem.
 services:
   slopchan:
-    image: ${SLOPCHAN_IMAGE:-ghcr.io/rengwu/slopchan:0.2.1}
+    image: ${SLOPCHAN_IMAGE:-ghcr.io/rengwu/slopchan:latest}
     restart: unless-stopped
     ports:
-      - "${SLOPCHAN_BIND:-127.0.0.1}:${SLOPCHAN_PORT:-8080}:8080"
+      - "${SLOPCHAN_BIND:-127.0.0.1}:${SLOPCHAN_PORT:-8443}:8080"
     environment:
-      SLOPCHAN_TOKENS: ${SLOPCHAN_TOKENS:-}
-      SLOPCHAN_ADMIN_EMAIL: ${SLOPCHAN_ADMIN_EMAIL:-}
-      SLOPCHAN_ADMIN_PASSWORD: ${SLOPCHAN_ADMIN_PASSWORD:-}
+      SLOPCHAN_ADMIN_EMAIL: ${SLOPCHAN_ADMIN_EMAIL:?Set the initial admin email}
+      SLOPCHAN_ADMIN_PASSWORD: ${SLOPCHAN_ADMIN_PASSWORD:?Set the initial admin password}
+      SLOPCHAN_TLS_CERT: /tls/cert.pem
+      SLOPCHAN_TLS_KEY: /tls/key.pem
     volumes:
       - slopchan_data:/data
+      - ${SLOPCHAN_TLS_DIR:-./tls}:/tls:ro
     read_only: true
     security_opt:
       - no-new-privileges:true

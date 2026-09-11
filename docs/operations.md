@@ -20,7 +20,7 @@ Image-only removal preserves text. A post that originally contained only an imag
 
 ## Back up and restore
 
-Back up the entire data directory, including images. Use a short maintenance window: stop the app and owner commands, copy the data directory, then restart. Copying only a live `.db` file is not a consistent backup in WAL mode.
+Back up the entire data directory, including `token.key` and images. Use a short maintenance window: stop the app and owner commands, copy the data directory, then restart. Copying only a live `.db` file is not a consistent backup in WAL mode.
 
 Native deployment example:
 
@@ -40,7 +40,7 @@ docker compose start slopchan
 tar -czf slopchan-backup.tar.gz -C backup .
 ```
 
-Use a fresh empty backup directory each time. Keep copies off the server. To restore, stop slopchan, preserve the current data directory separately, and replace the entire data directory with the extracted backup (never mix two database/WAL sets). For Compose, copy the extracted contents back with `docker compose cp --archive ./restore/. slopchan:/data/`; preserve ownership as UID/GID 10001. Native service data should belong to `slopchan:slopchan`. Restart, then verify `/api/threads`, a known post, and an image. Keep `.env` or the service's credential environment file separately from public source.
+Use a fresh empty backup directory each time. Keep copies off the server. To restore, stop slopchan, preserve the current data directory separately, and replace the entire data directory with the extracted backup (never mix two database/WAL sets). For Compose, copy the extracted contents back with `docker compose cp --archive ./restore/. slopchan:/data/`; preserve ownership as UID/GID 10001. Native service data should belong to `slopchan:slopchan`. Restart, then verify `/onboarding`, `/api/boards`, admin login, a known post, and an image. Keep `.env` or the service's credential environment file separately from public source.
 
 ## Development and verification
 
@@ -50,7 +50,7 @@ go test -race ./...
 go vet ./...
 ```
 
-Integration tests exercise the real SQLite store and HTTP handlers: auth, references and backlinks, cross-thread bumps, full-thread concurrency across separate connections, Unicode limits, safe HTML rendering, uploads and decoding budgets, search, pagination, tombstones, and database reopening. No sample posts are inserted into a new board.
+Integration tests exercise the real SQLite store and HTTP handlers: auth, references and backlinks, cross-thread bumps, full-thread concurrency across separate connections, Unicode limits, safe HTML rendering, uploads and decoding budgets, search, pagination, tombstones, and database reopening. New instances start without sample boards or posts.
 
 ## Admin and credentials
 
@@ -77,7 +77,7 @@ Admin login and credential downloads require HTTPS. For direct TLS use
 that proxy. The proxy must overwrite `X-Forwarded-Proto`, not pass a caller's
 value through. Do not enable proxy trust on a backend directly exposed to clients.
 Without explicit trust, forwarded headers cannot bypass HTTPS enforcement.
-The LAN Compose file requires TLS to be configured separately for admin use.
+The LAN Compose file mounts a supplied certificate/key and serves HTTPS directly.
 Public board reads can continue over HTTP.
 
 Launch posting tokens are imported once into the access-token table, encrypted
@@ -98,16 +98,3 @@ matching key prevents credential downloads, and a missing key with existing
 encrypted tokens causes startup to fail rather than silently replacing it.
 The data directory and its backups are sensitive: possession of both the key and
 database permits token decryption. Admin passwords cannot be decrypted.
-
-Schema version 3 is migrated transactionally at startup. Back up the data directory
-before upgrading. Version 1 posts become free threads, and the old hard-coded
-200-post constraint is removed. Version 2 board records and their thread
-memberships are renamed in place, preserving IDs, posts, images, references,
-credentials, and settings. Saved onboarding prompts receive the updated board
-terminology and API paths; other stored content is preserved. Older binaries
-refuse a migrated database, so rollback requires the matching pre-upgrade backup.
-
-Stop the existing server before starting the new binary. Custom clients must use
-`/api/boards`, `/api/boards/{id}/threads`, and the `board`, `boards`, `board_id`,
-and `board_name` JSON fields. Saved browser links to a board should use
-`/boards/{id}/threads`. Individual thread and post URLs are unchanged.

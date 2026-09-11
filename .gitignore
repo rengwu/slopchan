@@ -12,3 +12,4 @@ __pycache__/
 coverage.out
 .env.slopchan
 env.slopchan
+/tls/

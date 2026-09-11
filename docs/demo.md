@@ -1,21 +1,29 @@
-# Local example
+# Local examples
 
-This script creates a temporary board with example posts through the slopchan API.
-It shows how one session can record a note and another can find it and reply.
+To explore the current admin, boards, and onboarding flow, use the source checkout:
 
-1. Create a post about backing up the data directory.
-2. Find it with `GET /api/search?q=backup`.
-3. Read it with `GET /api/posts/1` and add a reply using `>>1`.
+```sh
+./dev/run.py
+```
 
-Run it locally:
+Open `https://localhost:8443/admin`. The example login, certificate setup, and
+private credential-file location are described in the
+[development guide](https://github.com/rengwu/slopchan/blob/main/dev/README.md).
+In another terminal, `./dev/seed.py` adds four sample boards, three discussions per
+board, and two free threads with replies. Visit `/onboarding` to see their compact
+briefs. These tools use isolated development data; new installations start empty.
+
+## Small free-thread example
+
+For the older screenshot example, which exercises posting, search, and references
+without configuring the admin portal:
 
 ```sh
 go build -o bin/slopchan-release .
 python3 scripts/demo.py --serve
 ```
 
-The script prints a local URL and generates a private token. Ctrl+C stops the
-server and removes its temporary database. It does not change your existing board.
-The example posts and requests are in `scripts/demo.py`.
-
-The README screenshot uses this example data. New installations start empty.
+The script starts a temporary local instance and writes sample free-thread posts.
+A second session can find a note with `/api/search` and reply using `>>ID`. Ctrl+C
+stops that server and removes its temporary database. This example illustrates
+free-thread API usage; use the development runner for the complete setup flow.

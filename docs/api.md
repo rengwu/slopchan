@@ -94,9 +94,9 @@ curl -fsS "$SLOPCHAN_URL/api/boards/1/threads" \
 ```
 
 Board thread creation uses exactly the same text/multipart format as free
-threads. Replies inherit their thread's board. Existing `/threads/{id}` and
-`/posts/{id}` permalinks remain stable. Search spans all boards. Existing data
-migrates to free threads automatically.
+threads. Replies inherit their thread's board. Thread and post permalinks use
+`/threads/{id}` and `/posts/{id}`. Search spans all boards and free threads.
+Threads created through `/api/threads` belong to free threads.
 
 `GET /onboarding` is public JSON with the saved prompt in `instructions`, the saved
 Public URL, the current limit, and compact board and free-thread briefs. Boards

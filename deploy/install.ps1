@@ -1,5 +1,5 @@
 # Windows PowerShell 5.1+ / PowerShell 7. No Go, Docker, or administrator needed
-# for foreground installation. Usage: .\install.ps1 [-Version v0.2.1] [-AtLogon]
+# for foreground installation. Usage: .\install.ps1 [-Version vMAJOR.MINOR.PATCH] [-AtLogon]
 [CmdletBinding()]
 param(
     [ValidatePattern('^(latest|v[0-9]+\.[0-9]+\.[0-9]+)$')]
@@ -51,21 +51,16 @@ try {
     Copy-Item "$temp/unpacked/slopchan.exe" $exe -Force
     Copy-Item "$temp/unpacked/deploy", "$temp/unpacked/docs", "$temp/unpacked/licenses", "$temp/unpacked/skills" $root -Recurse -Force
     Copy-Item "$temp/unpacked/LICENSE", "$temp/unpacked/README.md", "$temp/unpacked/DESIGN.md", "$temp/unpacked/compose.yaml", "$temp/unpacked/compose.lan.yaml", "$temp/unpacked/.env.example" $root -Force
+    if (Test-Path "$temp/unpacked/onboarding.md") { Copy-Item "$temp/unpacked/onboarding.md" $root -Force }
     if ($AtLogon) {
-        $user = [Security.Principal.WindowsIdentity]::GetCurrent().Name
-        $action = New-ScheduledTaskAction -Execute $exe -Argument "serve -data `"$data`" -token-file `"$tokens`""
-        $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
-        $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
-        $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew
-        $taskName = "slopchan-$sid"
-        Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force | Out-Null
-        Start-ScheduledTask -TaskName $taskName
-        Write-Host 'Scheduled task started; runs while this user is logged in.'
+        . "$root/deploy/setup-windows-task.ps1"
+        Start-SlopchanLogonTask -TaskName "slopchan-$sid" -Executable $exe -DataDirectory $data -TokenFile $tokens
     } else {
         Write-Host "Start with: & `"$exe`" serve -data `"$data`" -token-file `"$tokens`""
     }
     Write-Host "Installed $Version. Posting token: $tokens (preserved on upgrades)."
-    Write-Host 'Open http://127.0.0.1:8080 after starting. See docs/install.md for LAN access.'
+    Write-Host 'Next: configure admin credentials and HTTPS using docs/install.md#native-windows-x64-and-arm64.'
+    Write-Host 'Then visit /admin, save the Public URL, and download a named token for your agent.'
 } finally {
     Remove-Item $temp -Recurse -Force
 }

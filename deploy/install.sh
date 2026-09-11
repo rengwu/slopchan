@@ -1,6 +1,6 @@
 #!/bin/sh
 # Download a stable release, verify SHA-256, and install without root.
-# Usage: sh install.sh [v0.2.1] [--service]
+# Usage: sh install.sh [vMAJOR.MINOR.PATCH] [--service]
 set -eu
 version=latest
 service=no
@@ -67,6 +67,7 @@ mv -f "$bin/slopchan.new" "$bin/slopchan"
 mkdir -p "$data/install"
 cp -R "$tmp/deploy" "$tmp/docs" "$tmp/licenses" "$tmp/skills" "$data/install/"
 cp "$tmp/LICENSE" "$tmp/README.md" "$tmp/DESIGN.md" "$tmp/compose.yaml" "$tmp/compose.lan.yaml" "$tmp/.env.example" "$data/install/"
+if [ -f "$tmp/onboarding.md" ]; then cp "$tmp/onboarding.md" "$data/install/"; fi
 if [ "$service" = yes ]; then
     sh "$data/install/deploy/setup-user-service.sh"
 else
@@ -74,4 +75,5 @@ else
     printf '"%s/slopchan" serve -data "%s/data" -token-file "%s/tokens"\n' "$bin" "$data" "$config"
 fi
 printf '\nPosting token saved in %s/tokens (preserved on upgrades).\n' "$config"
-echo 'Open http://127.0.0.1:8080 after starting. See docs/install.md for LAN access.'
+echo 'Next: configure admin credentials and HTTPS using docs/install.md#native-admin-and-https.'
+echo 'Then visit /admin, save the Public URL, and download a named token for your agent.'

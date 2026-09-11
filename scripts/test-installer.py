@@ -6,6 +6,7 @@ docker run --rm -v "$PWD:/src:ro" python:3.13-alpine sh -c \
 """
 import hashlib
 import os
+import plistlib
 from pathlib import Path
 import subprocess
 import tarfile
@@ -21,7 +22,7 @@ with tempfile.TemporaryDirectory() as tmp:
     stage = root / "stage"
     stage.mkdir()
     (stage / "slopchan").write_text("#!/bin/sh\necho fixture\n")
-    for filename in ("LICENSE", "README.md", "DESIGN.md", "compose.yaml", "compose.lan.yaml", ".env.example"):
+    for filename in ("LICENSE", "README.md", "DESIGN.md", "onboarding.md", "compose.yaml", "compose.lan.yaml", ".env.example"):
         (stage / filename).write_text("fixture")
     for directory in ("deploy", "docs", "licenses", "skills"):
         (stage / directory).mkdir()
@@ -48,7 +49,7 @@ else:
     assert url.endswith("/" + os.environ["ASSET"]), url
     shutil.copyfile(os.environ["ARCHIVE"], out)
 ''')
-    (stubs / "uname").write_text('#!/bin/sh\ncase "$1" in -s) echo Linux ;; -m) echo "$CPU" ;; esac\n')
+    (stubs / "uname").write_text('#!/bin/sh\ncase "$1" in -s) echo "${TEST_OS:-Linux}" ;; -m) echo "$CPU" ;; esac\n')
     (stubs / "getconf").write_text('#!/bin/sh\necho "$BITS"\n')
     for path in stubs.iterdir():
         path.chmod(0o755)
@@ -77,4 +78,28 @@ else:
     assert binary.read_text() == "existing installation", "Bad download replaced executable"
     result = subprocess.run(["sh", str(script), "v0.2.0"], env={**current, "CPU": "mips"}, capture_output=True, text=True)
     assert result.returncode != 0 and "Unsupported CPU" in result.stderr, result
-print("Unix installer passed: architecture selection, checksums, private token, upgrade preservation, bad-download rejection")
+    # Stub service-manager commands, while generating real files in the disposable account.
+    for command in ("systemctl", "launchctl"):
+        (stubs / command).write_text("#!/bin/sh\nexit 0\n")
+        (stubs / command).chmod(0o755)
+    (stubs / "plutil").write_text("#!/usr/bin/env python3\nimport plistlib,sys\nwith open(sys.argv[-1], 'rb') as f: plistlib.load(f)\n")
+    (stubs / "plutil").chmod(0o755)
+    generator = script.parent / "setup-user-service.sh"
+    for host_os in ("Linux", "Darwin"):
+        service_env = {**env, "TEST_OS": host_os}
+        subprocess.run(["sh", str(generator)], env=service_env, check=True)
+        if host_os == "Linux":
+            definition = Path.home() / ".config/systemd/user/slopchan.service"
+            with definition.open("a") as stream:
+                stream.write("\n[Service]\nEnvironment=SLOPCHAN_TLS_CERT=/private/cert.pem\nEnvironment=SLOPCHAN_TLS_KEY=/private/key.pem\n")
+        else:
+            definition = Path.home() / "Library/LaunchAgents/io.slopchan.plist"
+            value = plistlib.loads(definition.read_bytes())
+            value["ProgramArguments"] += ["-tls-cert", "/private TLS/cert.pem", "-tls-key", "/private TLS/key.pem", "-listen", "127.0.0.1:8443"]
+            value["EnvironmentVariables"] = {"SLOPCHAN_TRUST_PROXY": "false"}
+            value["ThrottleInterval"] = 17
+            definition.write_bytes(plistlib.dumps(value))
+        before = definition.read_bytes()
+        subprocess.run(["sh", str(generator)], env=service_env, check=True)
+        assert definition.read_bytes() == before, f"{host_os} service setup overwrote custom configuration"
+print("Unix installer passed: architecture selection, checksums, private token, upgrade preservation, bad-download rejection, service configuration preservation")
