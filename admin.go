@@ -78,7 +78,7 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	path := strings.TrimSuffix(r.URL.Path, "/")
-	allowed := map[string]string{"/admin": "Site settings", "/admin/settings": "Site settings", "/admin/login": "Admin login", "/admin/tokens": "Access tokens", "/admin/account": "Admin login", "/admin/onboarding": "Onboarding management", "/admin/logout": "Log out", "/admin/skill": "Slopchan skill"}
+	allowed := map[string]string{"/admin": "Site settings", "/admin/settings": "Site settings", "/admin/login": "Admin login", "/admin/tokens": "Access tokens", "/admin/account": "Admin login", "/admin/onboarding": "Onboarding management", "/admin/logout": "Log out", "/admin/skill": "slopchan skill"}
 	title, exists := allowed[path]
 	if !exists {
 		http.NotFound(w, r)
