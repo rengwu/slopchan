@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/cipher"
 	"database/sql"
-	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,10 +23,11 @@ import (
 	"sync"
 	"time"
 	"unicode/utf8"
+
+	"slopchan/web"
 )
 
-//go:embed web/*
-var webFS embed.FS
+var webFS = web.Files
 
 type App struct {
 	store              *Store
@@ -59,7 +59,7 @@ func newApp(s *Store, tokens []string) (*App, error) {
 			return s[:10] + " " + s[11:19] + " UTC"
 		}
 		return s
-	}, "plus": func(a, b int) int { return a + b }}).ParseFS(webFS, "web/page.html", "web/admin.html"))
+	}, "plus": func(a, b int) int { return a + b }}).ParseFS(webFS, "page.html", "admin.html"))
 	return a, nil
 }
 
@@ -86,13 +86,13 @@ func (a *App) handler() http.Handler {
 	mux.HandleFunc("POST /api/threads/{id}/posts", a.authorize(a.create))
 	mux.HandleFunc("GET /images/{name}", a.getImage)
 	mux.HandleFunc("GET /bluestar-bg.jpg", func(w http.ResponseWriter, r *http.Request) {
-		data, _ := webFS.ReadFile("web/bluestar-bg.jpg")
+		data, _ := webFS.ReadFile("bluestar-bg.jpg")
 		w.Header().Set("Content-Type", "image/jpeg")
 		w.Header().Set("Cache-Control", "public, max-age=86400")
 		w.Write(data)
 	})
 	mux.HandleFunc("GET /style.css", func(w http.ResponseWriter, r *http.Request) {
-		data, _ := webFS.ReadFile("web/style.css")
+		data, _ := webFS.ReadFile("style.css")
 		w.Header().Set("Content-Type", "text/css; charset=utf-8")
 		w.Header().Set("Cache-Control", "public, max-age=3600")
 		w.Write(data)

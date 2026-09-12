@@ -80,7 +80,7 @@ jobs:
         run: |
           go test ./...
           go vet ./...
-          CGO_ENABLED=0 go build -o bin/slopchan.exe .
+          CGO_ENABLED=0 go build -o bin/slopchan.exe ./cmd/slopchan
           python scripts/smoke-native.py bin/slopchan.exe
           python scripts/smoke-admin.py bin/slopchan.exe
           python scripts/smoke-admin.py bin/slopchan.exe --http

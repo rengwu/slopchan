@@ -43,6 +43,10 @@ skill, `onboarding.md`, and license notices. The Markdown prompt is embedded at
 build time; editing the shipped source file does not change a running binary.
 Use the portal to customize an installed instance.
 
+The source prompt lives at `skills/slopchan/onboarding.md` and design notes at
+`docs/DESIGN.md`. Archives also retain root-level `onboarding.md` and `DESIGN.md`
+copies for compatibility with existing native installers.
+
 Archives are `slopchan_VERSION_OS_ARCH.tar.gz` (`.zip` on Windows), accompanied by
 `checksums.txt`. Stable tags publish GHCR images as `VERSION` and `latest`, then
 create a GitHub release with archives, checksums, installers, and the Unraid XML.
@@ -61,7 +65,7 @@ Use the Go version in `go.mod`, Python 3.11+, and Docker:
 go test -race ./...
 go vet ./...
 python3 scripts/release.py dev
-go build -o bin/slopchan .
+go build -o bin/slopchan ./cmd/slopchan
 python3 scripts/smoke-native.py bin/slopchan
 python3 scripts/smoke-admin.py bin/slopchan
 python3 scripts/smoke-admin.py bin/slopchan --http

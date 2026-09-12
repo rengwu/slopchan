@@ -1,13 +1,13 @@
 package main
 
 import (
-	_ "embed"
 	"net/http"
 	"strings"
+
+	"slopchan/skills"
 )
 
-//go:embed onboarding.md
-var defaultOnboarding string
+var defaultOnboarding = skills.DefaultOnboarding
 
 type onboardingBoard struct {
 	ID            int64              `json:"id"`

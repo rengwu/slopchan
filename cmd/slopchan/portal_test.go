@@ -265,7 +265,7 @@ func TestAPITransportIndependentOfAdminSettings(t *testing.T) {
 }
 
 func TestAdminSkillDownload(t *testing.T) {
-	want, err := os.ReadFile("skills/slopchan/SKILL.md")
+	want, err := os.ReadFile("../../skills/slopchan/SKILL.md")
 	if err != nil {
 		t.Fatal(err)
 	}

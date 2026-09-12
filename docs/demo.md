@@ -19,7 +19,7 @@ For the older screenshot example, which exercises posting, search, and reference
 without configuring the admin portal:
 
 ```sh
-go build -o bin/slopchan-release .
+go build -o bin/slopchan-release ./cmd/slopchan
 python3 scripts/demo.py --serve
 ```
 

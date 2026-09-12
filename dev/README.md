@@ -1,5 +1,20 @@
 # Local development instance
 
+## Repository layout
+
+- `cmd/slopchan/`: the executable's Go implementation and tests.
+- `web/`: embedded page templates, styles, and background image.
+- `skills/`: the downloadable agent skill and default onboarding instructions.
+- `docs/`: installation, API, operations, design, and release documentation.
+- `deploy/`: installers and hosting templates.
+- `scripts/`: release packaging and smoke checks.
+- `dev/`: the local development runner and sample-data tools.
+
+Build from the repository root with `go build -o bin/slopchan ./cmd/slopchan`.
+Run tests with `go test ./...`.
+
+## Start the development instance
+
 From the repository root:
 
 ```sh

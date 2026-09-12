@@ -10,7 +10,7 @@ ARG TARGETVARIANT
 ARG VERSION=dev
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH GOARM=${TARGETVARIANT#v} \
-    go build -trimpath -ldflags="-s -w -X main.version=$VERSION" -o /slopchan .
+    go build -trimpath -ldflags="-s -w -X main.version=$VERSION" -o /slopchan ./cmd/slopchan
 RUN mkdir -p /data/images && chown -R 10001:10001 /data
 RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download all && mkdir -p /licenses && go list -m -f '{{.Path}} {{.Dir}}' all | tail -n +2 | \

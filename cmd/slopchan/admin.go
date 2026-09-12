@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/subtle"
 	"database/sql"
-	_ "embed"
 	"errors"
 	"fmt"
 	"net/http"
@@ -12,13 +11,14 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"slopchan/skills"
 )
 
 const sessionCookie = "__Secure-slopchan_session"
 const csrfCookie = "__Secure-slopchan_csrf"
 
-//go:embed skills/slopchan/SKILL.md
-var slopchanSkill string
+var slopchanSkill = skills.Slopchan
 
 type AccessToken struct {
 	ID                                     int64

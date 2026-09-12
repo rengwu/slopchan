@@ -378,7 +378,7 @@ Delete data and credential files only when intentionally erasing the instance.
 Use the Go version in `go.mod`:
 
 ```sh
-go build -trimpath -o bin/slopchan .
+go build -trimpath -o bin/slopchan ./cmd/slopchan
 ```
 
 Run that binary with the native admin/HTTPS arguments above. For an isolated local
@@ -387,5 +387,5 @@ see [dev/README.md](https://github.com/rengwu/slopchan/blob/main/dev/README.md).
 
 For a local container, `docker build -t slopchan:local .`, then set
 `SLOPCHAN_IMAGE=slopchan:local` in the chosen Compose stack. HTML, CSS, and
-`onboarding.md` are embedded at build time. On Windows use `bin/slopchan.exe`.
+`skills/slopchan/onboarding.md` are embedded at build time. On Windows use `bin/slopchan.exe`.
 Release archives: `python3 scripts/release.py dev`. See [distribution](distribution.md).

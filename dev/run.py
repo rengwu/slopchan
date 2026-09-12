@@ -126,7 +126,7 @@ def main():
     RUNTIME.mkdir(exist_ok=True, mode=0o700)
     binary = RUNTIME / "slopchan"
     print("Building current source into dev/runtime/slopchan…", flush=True)
-    subprocess.run(["go", "build", "-o", str(binary), "."], cwd=ROOT, check=True)
+    subprocess.run(["go", "build", "-o", str(binary), "./cmd/slopchan"], cwd=ROOT, check=True)
     cert, key = prepare_tls()
     origin = f"https://localhost:{port}"
     private_write(HERE / ".env.slopchan", "\n".join([

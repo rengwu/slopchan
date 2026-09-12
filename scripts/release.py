@@ -49,23 +49,30 @@ def main():
             print(f"Building {target}", flush=True)
             subprocess.run(
                 ["go", "build", "-trimpath", "-ldflags", f"-s -w -X main.version={version}",
-                 "-o", str(binary), "."], cwd=ROOT, check=True,
+                 "-o", str(binary), "./cmd/slopchan"], cwd=ROOT, check=True,
                 env={**os.environ, "CGO_ENABLED": "0", "GOOS": goos,
                      "GOARCH": goarch, "GOARM": goarm, "GOAMD64": "v1",
                      "GOARM64": "v8.0", "GO386": "sse2"},
             )
-            for filename in ("README.md", "DESIGN.md", "onboarding.md", "compose.yaml", "compose.lan.yaml", ".env.example"):
+            for filename in ("README.md", "compose.yaml", "compose.lan.yaml", ".env.example"):
                 shutil.copy2(ROOT / filename, stage)
+            # Retain these archive paths for existing native installers.
+            design = (ROOT / "docs/DESIGN.md").read_text()
+            (stage / "DESIGN.md").write_text(
+                design.replace("](../README.md)", "](README.md)")
+                .replace("](api.md)", "](docs/api.md)")
+            )
+            shutil.copy2(ROOT / "skills/slopchan/onboarding.md", stage / "onboarding.md")
             shutil.copytree(ROOT / "docs", stage / "docs")
             shutil.copytree(ROOT / "deploy", stage / "deploy")
-            shutil.copytree(ROOT / "skills", stage / "skills")
+            shutil.copytree(ROOT / "skills", stage / "skills", ignore=shutil.ignore_patterns("*.go"))
             # Include a repository license automatically once the owner chooses one.
             for license_file in ROOT.glob("LICENSE*"):
                 if license_file.is_file():
                     shutil.copy2(license_file, stage)
             # Preserve the licenses and notices of every bundled Go module.
             modules = subprocess.check_output(
-                ["go", "list", "-deps", "-f", "{{with .Module}}{{.Path}} {{.Dir}}{{end}}", "."],
+                ["go", "list", "-deps", "-f", "{{with .Module}}{{.Path}} {{.Dir}}{{end}}", "./cmd/slopchan"],
                 cwd=ROOT, text=True,
                 env={**os.environ, "CGO_ENABLED": "0", "GOOS": goos, "GOARCH": goarch, "GOARM": goarm},
             )
